@@ -271,6 +271,12 @@ void test_imm_u(const char* name, uint32_t inst, uint32_t start, uint32_t end,
 // bgeu andi and csrrci
 #define funct3_7_111 0b111
 
+// slli srli add sll slt sltu xor srl or and
+#define funct7_0_0000000 0b0000000
+
+// srai sub sra
+#define funct7_64_0100000 0b0100000
+
 //// 0000_0000_0000_0000_0000_0000_0000_0111 -> 0000_0000_0000_0000_0111_0000_0000_0000
 //#define funct3_enc(value) value << 12
 //
@@ -288,13 +294,13 @@ typedef struct instruction
 	uint8_t type;
 	union 
 	{
-		struct 
+		struct op
 		{
 			uint32_t opcode : 7;
 			uint32_t rest : 25;
 		};
 
-		struct
+		struct I
 		{
 			uint32_t opcode : 7;
 			uint32_t rd : 5;
@@ -303,7 +309,7 @@ typedef struct instruction
 			uint32_t imm : 12;
 		} I;
 
-		struct
+		struct SB
 		{
 			uint32_t opcode : 7;
 			uint32_t imm5 : 5;
@@ -313,14 +319,14 @@ typedef struct instruction
 			uint32_t imm7 : 7;
 		} SB;
 
-		struct 
+		struct UJ
 		{
 			uint32_t opcode : 7;
 			uint32_t rd : 5;
 			uint32_t imm : 20;
 		} UJ;
 
-		struct 
+		struct R 
 		{
 			uint32_t opcode : 7;
 			uint32_t rd : 5;
@@ -374,7 +380,7 @@ void execute_inst(instruction inst, riscv_cpu* cpu)
 			{
 				case funct3_0_000:
 				{
-					cpu->registers[inst.I.rd] = cpu->registers[inst.I.rs1] + i_imm(inst.I.imm << 20);
+					cpu->registers[inst.I.rd] = cpu->registers[inst.I.rs1] + i_imm(inst.bits);
 					break;
 				}
 
@@ -385,7 +391,36 @@ void execute_inst(instruction inst, riscv_cpu* cpu)
 		}
 
 		case opcode_alu_register:
+		{
+			switch (inst.R.funct3)
+			{
+				case funct3_0_000:
+				{
+					switch (inst.R.funct7)
+					{
+						case funct7_0_0000000:
+						{
+							cpu->registers[inst.R.rd] = cpu->registers[inst.R.rs1] + cpu->registers[inst.R.rs2];
+							break;
+						}
+
+						case funct7_64_0100000:
+						{
+							cpu->registers[inst.R.rd] = cpu->registers[inst.R.rs1] - cpu->registers[inst.R.rs2];
+							break;
+						}
+
+						default:
+							break;
+					}
+					break;
+				}
+
+				default:
+					break;
+			}
 			break;
+		}
 
 		case opcode_e_and_system:
 			break;
@@ -444,23 +479,35 @@ int main(int argc, char* *argv)
 			.type = 1,
 			.I = {
 				.opcode = opcode_alu_and_shift_imm,
-				.rd = 0b00001,
+				.rd = 1,
 				.funct3 = funct3_0_000,
-				.rs1 = 0b00000,
-				.imm = i_imm_enc(788) >> 20
+				.rs1 = 0
 			}
 		},
 		{
 			.type = 1,
 			.I = {
 				.opcode = opcode_alu_and_shift_imm,
-				.rd = 0b00001,
+				.rd = 2,
 				.funct3 = funct3_0_000,
-				.rs1 = 0b00001,
-				.imm = i_imm_enc(-344) >> 20
+				.rs1 = 0
 			}
-		}
+		},
+		{
+			.type = 4,
+			.R = {
+				.opcode = opcode_alu_register,
+				.rd = 3,
+				.funct3 = funct3_0_000,
+				.rs1 = 1,
+				.rs2 = 2,
+				.funct7 = funct7_64_0100000
+			}
+		},
 	};
+
+	inst_list[0].bits |= i_imm_enc(788);
+	inst_list[1].bits |= i_imm_enc(344);
 
 	riscv_cpu cpu = {
 		.program_counter = 0,
@@ -468,9 +515,14 @@ int main(int argc, char* *argv)
 		.registers = (uint32_t*)calloc(32, sizeof(uint32_t)),
 	};
 
-	for (uint32_t i = 0; i < 2; i++)
+	for (uint32_t i = 0; i < 3; i++)
 	{
+		cpu.program_counter += 4;
+
 		execute_inst(inst_list[i], &cpu);
+
+		if (cpu.program_counter == 0)
+			break;
 	}
 
 	free(cpu.memory);
