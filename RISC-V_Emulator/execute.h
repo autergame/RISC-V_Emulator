@@ -125,7 +125,7 @@ void execute_opcode_load(instruction inst, riscv_cpu* cpu)
 				((uint32_t)cpu->memory[address + 2] << 16) |
 				((uint32_t)cpu->memory[address + 1] << 8) |
 				(uint32_t)cpu->memory[address];
-			cpu->registers[inst.I.rd] = sign_extend(memory, 32);
+			cpu->registers[inst.I.rd] = memory;
 			cpu->program_counter = cpu->program_counter + 4;
 			break;
 		}
@@ -142,19 +142,6 @@ void execute_opcode_load(instruction inst, riscv_cpu* cpu)
 		{
 			uint32_t address = cpu->registers[inst.I.rs1] + i_imm(inst.bits);
 			uint32_t memory =
-				((uint32_t)cpu->memory[address + 1] << 8) |
-				(uint32_t)cpu->memory[address];
-			cpu->registers[inst.I.rd] = memory;
-			cpu->program_counter = cpu->program_counter + 4;
-			break;
-		}
-
-		case funct3_6_110: // lwu
-		{
-			uint32_t address = cpu->registers[inst.I.rs1] + i_imm(inst.bits);
-			uint32_t memory =
-				((uint32_t)cpu->memory[address + 3] << 24) |
-				((uint32_t)cpu->memory[address + 2] << 16) |
 				((uint32_t)cpu->memory[address + 1] << 8) |
 				(uint32_t)cpu->memory[address];
 			cpu->registers[inst.I.rd] = memory;
@@ -217,27 +204,10 @@ void execute_opcode_alu_and_shift_imm(instruction inst, riscv_cpu* cpu)
 			break;
 		}
 
-		case funct3_1_001: // slli slai
+		case funct3_1_001: // slli
 		{
-			switch (inst.R.funct7)
-			{
-				case funct7_0_0000000: // slli
-				{
-					cpu->registers[inst.R.rd] = cpu->registers[inst.R.rs1] << imm_shamt_i(inst.bits);
-					cpu->program_counter = cpu->program_counter + 4;
-					break;
-				}
-
-				case funct7_32_0100000: // slai
-				{
-					cpu->registers[inst.R.rd] = (int32_t)cpu->registers[inst.R.rs1] << imm_shamt_i(inst.bits);
-					cpu->program_counter = cpu->program_counter + 4;
-					break;
-				}
-
-				default:
-					break;
-			}
+			cpu->registers[inst.R.rd] = cpu->registers[inst.R.rs1] << imm_shamt_i(inst.bits);
+			cpu->program_counter = cpu->program_counter + 4;
 			break;
 		}
 
@@ -334,27 +304,10 @@ void execute_opcode_alu_register(instruction inst, riscv_cpu* cpu)
 			break;
 		}
 
-		case funct3_1_001: // sll sla
+		case funct3_1_001: // sll
 		{
-			switch (inst.R.funct7) // sll
-			{
-				case funct7_0_0000000:
-				{
-					cpu->registers[inst.R.rd] = cpu->registers[inst.R.rs1] << cpu->registers[inst.R.rs2];
-					cpu->program_counter = cpu->program_counter + 4;
-					break;
-				}
-
-				case funct7_32_0100000: // sla
-				{
-					cpu->registers[inst.R.rd] = (int32_t)cpu->registers[inst.R.rs1] << (int32_t)cpu->registers[inst.R.rs2];
-					cpu->program_counter = cpu->program_counter + 4;
-					break;
-				}
-
-				default:
-					break;
-			}
+			cpu->registers[inst.R.rd] = cpu->registers[inst.R.rs1] << cpu->registers[inst.R.rs2];
+			cpu->program_counter = cpu->program_counter + 4;
 			break;
 		}
 
@@ -392,7 +345,7 @@ void execute_opcode_alu_register(instruction inst, riscv_cpu* cpu)
 
 				case funct7_32_0100000: // sra
 				{
-					cpu->registers[inst.R.rd] = (int32_t)cpu->registers[inst.R.rs1] >> (int32_t)cpu->registers[inst.R.rs2];
+					cpu->registers[inst.R.rd] = (int32_t)cpu->registers[inst.R.rs1] >> cpu->registers[inst.R.rs2];
 					cpu->program_counter = cpu->program_counter + 4;
 					break;
 				}
