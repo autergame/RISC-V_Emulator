@@ -141,6 +141,14 @@
   <ItemGroup>
     <ClCompile Include="main.c" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="cpu.h" />
+    <ClInclude Include="execute.h" />
+    <ClInclude Include="imm_enc_dec.h" />
+    <ClInclude Include="instructions.h" />
+    <ClInclude Include="tests.h" />
+    <ClInclude Include="types.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
