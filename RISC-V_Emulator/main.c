@@ -9,35 +9,29 @@
 
 #include "execute.h"
 
-//#include "tests.h"
 
 int main(int argc, char* *argv)
 {
-	//tests_imm();
-
 	instruction inst_list[] = {
 		{
-			.type = 1,
 			.I = {
 				.opcode = opcode_alu_and_shift_imm,
 				.rd = 1,
 				.funct3 = funct3_0_000,
 				.rs1 = 0,
-				.imm = i_imm_enc(788) >> 20
+				.imm12 = i_imm_enc(788) >> 20
 			}
 		},
 		{
-			.type = 1,
 			.I = {
 				.opcode = opcode_alu_and_shift_imm,
 				.rd = 2,
 				.funct3 = funct3_0_000,
 				.rs1 = 0,
-				.imm = i_imm_enc(344) >> 20
+				.imm12 = i_imm_enc(344) >> 20
 			}
 		},
 		{
-			.type = 4,
 			.R = {
 				.opcode = opcode_alu_register,
 				.rd = 3,
