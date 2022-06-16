@@ -27,3 +27,13 @@ void destroy_riscv_cpu(riscv_cpu* cpu)
 	free(cpu->csrs);
 	free(cpu->memory);
 }
+
+uint32_t* memory_uint32(riscv_cpu* cpu, uint32_t address)
+{
+	return ((uint32_t*)(cpu->memory + address));
+}
+
+uint16_t* memory_uint16(riscv_cpu* cpu, uint32_t address)
+{
+	return ((uint16_t*)(cpu->memory + address));
+}

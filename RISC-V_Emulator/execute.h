@@ -14,7 +14,7 @@ void execute_opcode_branch(instruction inst, riscv_cpu* cpu)
 		case funct3_0_000: // beq
 		{
 			if (cpu->registers[inst.B.rs1] == cpu->registers[inst.B.rs2])
-				cpu->program_counter = (int32_t)cpu->program_counter + b_imm(inst.bits);
+				cpu->program_counter = (int32_t)cpu->program_counter + inst_b_imm(inst);
 			else
 				cpu->program_counter = cpu->program_counter + 4;
 			break;
@@ -23,7 +23,7 @@ void execute_opcode_branch(instruction inst, riscv_cpu* cpu)
 		case funct3_1_001: // bne
 		{
 			if (cpu->registers[inst.B.rs1] != cpu->registers[inst.B.rs2])
-				cpu->program_counter = (int32_t)cpu->program_counter + b_imm(inst.bits);
+				cpu->program_counter = (int32_t)cpu->program_counter + inst_b_imm(inst);
 			else
 				cpu->program_counter = cpu->program_counter + 4;
 			break;
@@ -32,7 +32,7 @@ void execute_opcode_branch(instruction inst, riscv_cpu* cpu)
 		case funct3_4_100: // blt
 		{
 			if ((int32_t)cpu->registers[inst.B.rs1] < (int32_t)cpu->registers[inst.B.rs2])
-				cpu->program_counter = (int32_t)cpu->program_counter + b_imm(inst.bits);
+				cpu->program_counter = (int32_t)cpu->program_counter + inst_b_imm(inst);
 			else
 				cpu->program_counter = cpu->program_counter + 4;
 			break;
@@ -41,7 +41,7 @@ void execute_opcode_branch(instruction inst, riscv_cpu* cpu)
 		case funct3_5_101: // bge
 		{
 			if ((int32_t)cpu->registers[inst.B.rs1] >= (int32_t)cpu->registers[inst.B.rs2])
-				cpu->program_counter = (int32_t)cpu->program_counter + b_imm(inst.bits);
+				cpu->program_counter = (int32_t)cpu->program_counter + inst_b_imm(inst);
 			else
 				cpu->program_counter = cpu->program_counter + 4;
 			break;
@@ -50,7 +50,7 @@ void execute_opcode_branch(instruction inst, riscv_cpu* cpu)
 		case funct3_6_110: // bltu
 		{
 			if (cpu->registers[inst.B.rs1] < cpu->registers[inst.B.rs2])
-				cpu->program_counter = (int32_t)cpu->program_counter + b_imm(inst.bits);
+				cpu->program_counter = (int32_t)cpu->program_counter + inst_b_imm(inst);
 			else
 				cpu->program_counter = cpu->program_counter + 4;
 			break;
@@ -59,7 +59,7 @@ void execute_opcode_branch(instruction inst, riscv_cpu* cpu)
 		case funct3_7_111: // bgeu
 		{
 			if (cpu->registers[inst.B.rs1] >= cpu->registers[inst.B.rs2])
-				cpu->program_counter = (int32_t)cpu->program_counter + b_imm(inst.bits);
+				cpu->program_counter = (int32_t)cpu->program_counter + inst_b_imm(inst);
 			else
 				cpu->program_counter = cpu->program_counter + 4;
 			break;
@@ -76,7 +76,7 @@ void execute_opcode_load(instruction inst, riscv_cpu* cpu)
 	{
 		case funct3_0_000: // lb
 		{
-			uint32_t address = cpu->registers[inst.I.rs1] + i_imm(inst.bits);
+			uint32_t address = cpu->registers[inst.I.rs1] + inst_i_imm(inst);
 			uint8_t value = cpu->memory[address];
 			cpu->registers[inst.I.rd] = sign_extend((uint32_t)value, 8);
 			cpu->program_counter = cpu->program_counter + 4;
@@ -85,8 +85,9 @@ void execute_opcode_load(instruction inst, riscv_cpu* cpu)
 
 		case funct3_1_001: // lh
 		{
-			uint32_t address = cpu->registers[inst.I.rs1] + i_imm(inst.bits);
-			uint16_t value = ((uint16_t*)cpu->memory)[address];
+			uint32_t address = cpu->registers[inst.I.rs1] + inst_i_imm(inst);
+			//uint16_t value = ((uint16_t*)cpu->memory)[address];
+			uint16_t value = *memory_uint16(cpu, address);
 			cpu->registers[inst.I.rd] = sign_extend((uint32_t)value, 16);
 			cpu->program_counter = cpu->program_counter + 4;
 			break;
@@ -94,15 +95,16 @@ void execute_opcode_load(instruction inst, riscv_cpu* cpu)
 
 		case funct3_2_010: // lw
 		{
-			uint32_t address = cpu->registers[inst.I.rs1] + i_imm(inst.bits);
-			cpu->registers[inst.I.rd] = ((uint32_t*)cpu->memory)[address];
+			uint32_t address = cpu->registers[inst.I.rs1] + inst_i_imm(inst);
+			//uint32_t value = ((uint32_t*)cpu->memory)[address];
+			cpu->registers[inst.I.rd] = *memory_uint32(cpu, address);
 			cpu->program_counter = cpu->program_counter + 4;
 			break;
 		}
 
 		case funct3_4_100: // lbu
 		{
-			uint32_t address = cpu->registers[inst.I.rs1] + i_imm(inst.bits);
+			uint32_t address = cpu->registers[inst.I.rs1] + inst_i_imm(inst);
 			cpu->registers[inst.I.rd] = (uint32_t)cpu->memory[address];
 			cpu->program_counter = cpu->program_counter + 4;
 			break;
@@ -110,8 +112,9 @@ void execute_opcode_load(instruction inst, riscv_cpu* cpu)
 
 		case funct3_5_101: // lhu
 		{
-			uint32_t address = cpu->registers[inst.I.rs1] + i_imm(inst.bits);
-			cpu->registers[inst.I.rd] = ((uint16_t*)cpu->memory)[address];
+			uint32_t address = cpu->registers[inst.I.rs1] + inst_i_imm(inst);
+			//uint16_t value = ((uint16_t*)cpu->memory)[address];
+			cpu->registers[inst.I.rd] = *memory_uint16(cpu, address);
 			cpu->program_counter = cpu->program_counter + 4;
 			break;
 		}
@@ -127,7 +130,7 @@ void execute_opcode_store(instruction inst, riscv_cpu* cpu)
 	{
 		case funct3_0_000: // sb
 		{
-			uint32_t address = cpu->registers[inst.S.rs1] + s_imm(inst.bits);
+			uint32_t address = cpu->registers[inst.S.rs1] + inst_s_imm(inst);
 			cpu->memory[address] = (uint8_t)cpu->registers[inst.S.rs2];
 			cpu->program_counter = cpu->program_counter + 4;
 			break;
@@ -135,16 +138,18 @@ void execute_opcode_store(instruction inst, riscv_cpu* cpu)
 
 		case funct3_1_001: // sh
 		{
-			uint32_t address = cpu->registers[inst.S.rs1] + s_imm(inst.bits);
-			((uint16_t*)cpu->memory)[address] = (uint16_t)cpu->registers[inst.S.rs2];
+			uint32_t address = cpu->registers[inst.S.rs1] + inst_s_imm(inst);
+			//((uint16_t*)cpu->memory)[address] = (uint16_t)cpu->registers[inst.S.rs2];
+			*memory_uint16(cpu, address) = (uint16_t)cpu->registers[inst.S.rs2];
 			cpu->program_counter = cpu->program_counter + 4;
 			break;
 		}
 
 		case funct3_2_010: // sw
 		{
-			uint32_t address = cpu->registers[inst.S.rs1] + s_imm(inst.bits);
-			((uint32_t*)cpu->memory)[address] = (uint32_t)cpu->registers[inst.S.rs2];
+			uint32_t address = cpu->registers[inst.S.rs1] + inst_s_imm(inst);
+			//((uint32_t*)cpu->memory)[address] = cpu->registers[inst.S.rs2];
+			*memory_uint32(cpu, address) = cpu->registers[inst.S.rs2];
 			cpu->program_counter = cpu->program_counter + 4;
 			break;
 		}
@@ -160,35 +165,35 @@ void execute_opcode_alu_and_shift_imm(instruction inst, riscv_cpu* cpu)
 	{
 		case funct3_0_000: // addi
 		{
-			cpu->registers[inst.I.rd] = cpu->registers[inst.I.rs1] + i_imm(inst.bits);
+			cpu->registers[inst.I.rd] = cpu->registers[inst.I.rs1] + inst_i_imm(inst);
 			cpu->program_counter = cpu->program_counter + 4;
 			break;
 		}
 
 		case funct3_1_001: // slli
 		{
-			cpu->registers[inst.shift.rd] = cpu->registers[inst.shift.rs1] << inst.shift.shamt;
+			cpu->registers[inst.shift.rd] = cpu->registers[inst.shift.rs1] << inst.shift.shamt_4_0;
 			cpu->program_counter = cpu->program_counter + 4;
 			break;
 		}
 
 		case funct3_2_010: // slti
 		{
-			cpu->registers[inst.I.rd] = (int32_t)cpu->registers[inst.I.rs1] < i_imm(inst.bits);
+			cpu->registers[inst.I.rd] = (int32_t)cpu->registers[inst.I.rs1] < inst_i_imm(inst);
 			cpu->program_counter = cpu->program_counter + 4;
 			break;
 		}
 
 		case funct3_3_011: // sltiu
 		{
-			cpu->registers[inst.I.rd] = cpu->registers[inst.I.rs1] < (uint32_t)i_imm(inst.bits);
+			cpu->registers[inst.I.rd] = cpu->registers[inst.I.rs1] < (uint32_t)inst_i_imm(inst);
 			cpu->program_counter = cpu->program_counter + 4;
 			break;
 		}
 
 		case funct3_4_100: // xori
 		{
-			cpu->registers[inst.I.rd] = cpu->registers[inst.I.rs1] ^ i_imm(inst.bits);
+			cpu->registers[inst.I.rd] = cpu->registers[inst.I.rs1] ^ inst_i_imm(inst);
 			cpu->program_counter = cpu->program_counter + 4;
 			break;
 		}
@@ -199,14 +204,14 @@ void execute_opcode_alu_and_shift_imm(instruction inst, riscv_cpu* cpu)
 			{
 				case funct7_0_0000000: // srli
 				{
-					cpu->registers[inst.shift.rd] = cpu->registers[inst.shift.rs1] >> inst.shift.shamt;
+					cpu->registers[inst.shift.rd] = cpu->registers[inst.shift.rs1] >> inst.shift.shamt_4_0;
 					cpu->program_counter = cpu->program_counter + 4;
 					break;
 				}
 
 				case funct7_32_0100000: // srai
 				{
-					cpu->registers[inst.shift.rd] = (int32_t)cpu->registers[inst.shift.rs1] >> inst.shift.shamt;
+					cpu->registers[inst.shift.rd] = (int32_t)cpu->registers[inst.shift.rs1] >> inst.shift.shamt_4_0;
 					cpu->program_counter = cpu->program_counter + 4;
 					break;
 				}
@@ -220,14 +225,14 @@ void execute_opcode_alu_and_shift_imm(instruction inst, riscv_cpu* cpu)
 
 		case funct3_6_110: // ori
 		{
-			cpu->registers[inst.I.rd] = cpu->registers[inst.I.rs1] | i_imm(inst.bits);
+			cpu->registers[inst.I.rd] = cpu->registers[inst.I.rs1] | inst_i_imm(inst);
 			cpu->program_counter = cpu->program_counter + 4;
 			break;
 		}
 
 		case funct3_7_111: // andi
 		{
-			cpu->registers[inst.I.rd] = cpu->registers[inst.I.rs1] & i_imm(inst.bits);
+			cpu->registers[inst.I.rd] = cpu->registers[inst.I.rs1] & inst_i_imm(inst);
 			cpu->program_counter = cpu->program_counter + 4;
 			break;
 		}
@@ -342,14 +347,14 @@ void execute_inst(instruction inst, riscv_cpu* cpu)
 	{
 		case opcode_lui:
 		{
-			cpu->registers[inst.U.rd] = inst.U.imm20;
+			cpu->registers[inst.U.rd] = inst_u_imm(inst);
 			cpu->program_counter = cpu->program_counter + 4;
 			break;
 		}
 
 		case opcode_auipc:
 		{
-			cpu->registers[inst.U.rd] = cpu->program_counter + (inst.U.imm20 << 20);
+			cpu->registers[inst.U.rd] = cpu->program_counter + inst_u_imm(inst);
 			cpu->program_counter = cpu->program_counter + 4;
 			break;
 		}
@@ -357,15 +362,15 @@ void execute_inst(instruction inst, riscv_cpu* cpu)
 		case opcode_jal:
 		{
 			cpu->registers[inst.J.rd] = cpu->program_counter + 4;
-			cpu->program_counter = (int32_t)cpu->program_counter + j_imm(inst.bits);
+			cpu->program_counter = (int32_t)cpu->program_counter + inst_j_imm(inst);
 			break;
 		}
 
 		case opcode_jalr:
 		{
 			cpu->registers[inst.I.rd] = cpu->program_counter + 4;
-			int32_t pc = (int32_t)cpu->registers[inst.I.rs1] + i_imm(inst.bits);
-			cpu->program_counter = (int32_t)(pc & 0b11111111111111111111111111111110);
+			int32_t pc = (int32_t)cpu->registers[inst.I.rs1] + inst_i_imm(inst);
+			cpu->program_counter = (int32_t)(pc & (~1)); // 1111_1111_1111_1111_1111_1111_1111_1110
 			break;
 		}
 

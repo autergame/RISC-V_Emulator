@@ -12,25 +12,34 @@
 
 int main(int argc, char* *argv)
 {
-	instruction inst_list[] = {
-		{
-			.I = {
-				.opcode = opcode_alu_and_shift_imm,
-				.rd = 1,
-				.funct3 = funct3_0_000,
-				.rs1 = 0,
-				.imm12 = i_imm_enc(788) >> 20
-			}
-		},
-		{
-			.I = {
-				.opcode = opcode_alu_and_shift_imm,
-				.rd = 2,
-				.funct3 = funct3_0_000,
-				.rs1 = 0,
-				.imm12 = i_imm_enc(344) >> 20
-			}
-		},
+	instruction inst_list[] = 
+	{
+		inst_i_imm_enc
+		(
+			(instruction)
+			{
+				.I = {
+					.opcode = opcode_alu_and_shift_imm,
+					.rd = 1,
+					.funct3 = funct3_0_000,
+					.rs1 = 0
+				}
+			},
+			788
+		),
+		inst_i_imm_enc
+		(
+			(instruction)
+			{
+				.I = {
+					.opcode = opcode_alu_and_shift_imm,
+					.rd = 2,
+					.funct3 = funct3_0_000,
+					.rs1 = 0
+				}
+			},
+			344
+		),
 		{
 			.R = {
 				.opcode = opcode_alu_register,
@@ -49,7 +58,7 @@ int main(int argc, char* *argv)
 
 	for (uint32_t i = 0; i < inst_list_size; i++)
 	{
-		*((uint32_t*)cpu.memory + i) = inst_list[i].bits;
+		*memory_uint32(&cpu, i * 4) = inst_list[i].bits;
 	}
 
 	for (uint32_t i = 0; i < inst_list_size; i++)
@@ -57,7 +66,7 @@ int main(int argc, char* *argv)
 		cpu.registers[0] = 0;
 
 		instruction inst = {
-			.bits = *(uint32_t*)(cpu.memory + cpu.program_counter)
+			.bits = *memory_uint32(&cpu, cpu.program_counter)
 		};
 
 		execute_inst(inst, &cpu);
