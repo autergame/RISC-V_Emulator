@@ -15,41 +15,41 @@
 // sb sh sw
 #define opcode_store 0b0100011
 
-// addi slli slti sltiu xori srli srai ori andi
+// addi srli srai slli slti sltiu xori ori andi
 #define opcode_alu_and_shift_imm 0b0010011
 
-// add sub sll slt sltu xor srl sra or and
+// add sub srl sra sll slt sltu xor or and
 #define opcode_alu_register 0b0110011
 
 // ecall ebreak csrrw csrrs csrrc csrrwi csrrsi csrrci
 #define opcode_e_and_system 0b1110011
 
-// jalr beq lb sb addi add sub
-#define funct3_0_000 0b000
+// beq jalr lb sb add addi sub
+#define funct3_000 0b000
 
-// bne lh sh slli sll csrrw
-#define funct3_1_001 0b001
+// bne lh sh sll slli csrrw
+#define funct3_001 0b001
 
-// lw sw slti slt csrrs
-#define funct3_2_010 0b010
+// lw sw slt slti csrrs
+#define funct3_010 0b010
 
-// sltiu sltu csrrc
-#define funct3_3_011 0b011
+// sltu sltiu csrrc
+#define funct3_011 0b011
 
-// blt lbu xori xor 
-#define funct3_4_100 0b100
+// blt lbu xor xori  
+#define funct3_100 0b100
 
-// bge lhu srli srai srl sra csrrwi
-#define funct3_5_101 0b101
+// bge lhu srl srli sra srai csrrwi
+#define funct3_101 0b101
 
 // bltu ori or csrrsi
-#define funct3_6_110 0b110
+#define funct3_110 0b110
 
 // bgeu andi and csrrci
-#define funct3_7_111 0b111
+#define funct3_111 0b111
 
-// slli srli add sll slt sltu xor srl or and
-#define funct7_0_0000000 0b0000000
+// sll slli srl srli slt sltu add xor or and
+#define funct7_0000000 0b0000000
 
-// srai sub sra
-#define funct7_32_0100000 0b0100000
+// sra srai sub 
+#define funct7_0100000 0b0100000

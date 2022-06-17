@@ -4,7 +4,7 @@
 
 typedef struct instruction
 {
-	union
+	union inst
 	{
 		struct op
 		{
@@ -22,7 +22,7 @@ typedef struct instruction
 			uint32_t funct7 : 7; // 1111_1110_0000_0000_0000_0000_0000_0000
 		} R;
 
-		union  
+		union IorShift
 		{
 			struct I
 			{
@@ -33,15 +33,15 @@ typedef struct instruction
 				uint32_t imm11_0 : 12; // 1111_1111_1111_0000_0000_0000_0000_0000
 			} I;
 
-			struct shift
+			struct Shift
 			{
 				uint32_t opcode    : 7; // 0000_0000_0000_0000_0000_0000_0111_1111
 				uint32_t rd        : 5; // 0000_0000_0000_0000_0000_1111_1000_0000
-				uint32_t func3     : 3; // 0000_0000_0000_0000_0111_0000_0000_0000
+				uint32_t funct3     : 3; // 0000_0000_0000_0000_0111_0000_0000_0000
 				uint32_t rs1       : 5; // 0000_0000_0000_1111_1000_0000_0000_0000
 				uint32_t shamt_4_0 : 5; // 0000_0001_1111_0000_0000_0000_0000_0000
-				uint32_t func7     : 7; // 1111_1110_0000_0000_0000_0000_0000_0000
-			} shift;
+				uint32_t funct7     : 7; // 1111_1110_0000_0000_0000_0000_0000_0000
+			} Shift;
 		};
 
 		struct S

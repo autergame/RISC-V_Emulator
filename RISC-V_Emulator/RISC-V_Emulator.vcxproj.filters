@@ -26,7 +26,7 @@
     <ClInclude Include="types.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="tests.h">
+    <ClInclude Include="tests_imm.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="instructions.h">
@@ -36,6 +36,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="cpu.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inst_defs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tests_inst.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
