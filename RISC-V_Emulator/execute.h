@@ -45,9 +45,9 @@ void execute_opcode_branch(instruction inst, riscv_cpu* cpu)
 
 		case funct3_110: // bltu
 		{
-			cpu->registers[inst.B.rs1] &= 0b00000000000000000000111111111111;
-			cpu->registers[inst.B.rs2] &= 0b00000000000000000000111111111111;
-			if (cpu->registers[inst.B.rs1] < cpu->registers[inst.B.rs2])
+			uint32_t rs1 = cpu->registers[inst.B.rs1] & 0b00000000000000000000111111111111;
+			uint32_t rs2 = cpu->registers[inst.B.rs2] & 0b00000000000000000000111111111111;
+			if (rs1 < rs2)
 				cpu->program_counter = (int32_t)cpu->program_counter + inst_b_imm(inst);
 			else
 				cpu->program_counter = cpu->program_counter + 4;
@@ -56,9 +56,9 @@ void execute_opcode_branch(instruction inst, riscv_cpu* cpu)
 
 		case funct3_111: // bgeu
 		{
-			cpu->registers[inst.B.rs1] &= 0b00000000000000000000111111111111;
-			cpu->registers[inst.B.rs2] &= 0b00000000000000000000111111111111;
-			if (cpu->registers[inst.B.rs1] >= cpu->registers[inst.B.rs2])
+			uint32_t rs1 = cpu->registers[inst.B.rs1] & 0b00000000000000000000111111111111;
+			uint32_t rs2 = cpu->registers[inst.B.rs2] & 0b00000000000000000000111111111111;
+			if (rs1 >= rs2)
 				cpu->program_counter = (int32_t)cpu->program_counter + inst_b_imm(inst);
 			else
 				cpu->program_counter = cpu->program_counter + 4;
@@ -86,7 +86,6 @@ void execute_opcode_load(instruction inst, riscv_cpu* cpu)
 		case funct3_001: // lh
 		{
 			uint32_t address = cpu->registers[inst.I.rs1] + inst_i_imm(inst);
-			//uint16_t value = ((uint16_t*)cpu->memory)[address];
 			uint16_t value = *memory_uint16(cpu, address);
 			cpu->registers[inst.I.rd] = sign_extend((uint32_t)value, 16);
 			cpu->program_counter = cpu->program_counter + 4;
@@ -96,7 +95,6 @@ void execute_opcode_load(instruction inst, riscv_cpu* cpu)
 		case funct3_010: // lw
 		{
 			uint32_t address = cpu->registers[inst.I.rs1] + inst_i_imm(inst);
-			//uint32_t value = ((uint32_t*)cpu->memory)[address];
 			cpu->registers[inst.I.rd] = *memory_uint32(cpu, address);
 			cpu->program_counter = cpu->program_counter + 4;
 			break;
@@ -113,7 +111,6 @@ void execute_opcode_load(instruction inst, riscv_cpu* cpu)
 		case funct3_101: // lhu
 		{
 			uint32_t address = cpu->registers[inst.I.rs1] + inst_i_imm(inst);
-			//uint16_t value = ((uint16_t*)cpu->memory)[address];
 			cpu->registers[inst.I.rd] = *memory_uint16(cpu, address);
 			cpu->program_counter = cpu->program_counter + 4;
 			break;
@@ -139,7 +136,6 @@ void execute_opcode_store(instruction inst, riscv_cpu* cpu)
 		case funct3_001: // sh
 		{
 			uint32_t address = cpu->registers[inst.S.rs1] + inst_s_imm(inst);
-			//((uint16_t*)cpu->memory)[address] = (uint16_t)cpu->registers[inst.S.rs2];
 			*memory_uint16(cpu, address) = (uint16_t)cpu->registers[inst.S.rs2];
 			cpu->program_counter = cpu->program_counter + 4;
 			break;
@@ -148,7 +144,6 @@ void execute_opcode_store(instruction inst, riscv_cpu* cpu)
 		case funct3_010: // sw
 		{
 			uint32_t address = cpu->registers[inst.S.rs1] + inst_s_imm(inst);
-			//((uint32_t*)cpu->memory)[address] = cpu->registers[inst.S.rs2];
 			*memory_uint32(cpu, address) = cpu->registers[inst.S.rs2];
 			cpu->program_counter = cpu->program_counter + 4;
 			break;
@@ -186,7 +181,9 @@ void execute_opcode_alu_and_shift_imm(instruction inst, riscv_cpu* cpu)
 
 		case funct3_011: // sltiu
 		{
-			cpu->registers[inst.I.rd] = cpu->registers[inst.I.rs1] < (uint32_t)inst_i_imm(inst);
+			uint32_t imm = (uint32_t)inst_i_imm(inst) & 0b00000000000000000000111111111111;
+			uint32_t rs1 = cpu->registers[inst.I.rs1] & 0b00000000000000000000111111111111;
+			cpu->registers[inst.I.rd] = rs1 < imm;
 			cpu->program_counter = cpu->program_counter + 4;
 			break;
 		}
@@ -286,7 +283,9 @@ void execute_opcode_alu_register(instruction inst, riscv_cpu* cpu)
 
 		case funct3_011: // sltu
 		{
-			cpu->registers[inst.R.rd] = cpu->registers[inst.R.rs1] < cpu->registers[inst.R.rs2];
+			uint32_t rs1 = cpu->registers[inst.R.rs1] & 0b00000000000000000000111111111111;
+			uint32_t rs2 = cpu->registers[inst.R.rs2] & 0b00000000000000000000111111111111;
+			cpu->registers[inst.R.rd] = rs1 < rs2;
 			cpu->program_counter = cpu->program_counter + 4;
 			break;
 		}
