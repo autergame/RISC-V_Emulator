@@ -8,7 +8,7 @@
 
 typedef struct riscv_cpu
 {
-	uint32_t* csrs;
+	uint64_t* csrs;
 	uint8_t* memory;
 	uint32_t registers[32];
 	uint32_t program_counter;
@@ -31,7 +31,7 @@ riscv_cpu create_riscv_cpu()
 	riscv_cpu cpu = {
 		.registers = { 0 },
 		.program_counter = 0,
-		.csrs = (uint32_t*)calloc(4096, sizeof(uint32_t)),
+		.csrs = (uint64_t*)calloc(4096, sizeof(uint64_t)),
 		.memory = (uint8_t*)calloc(memory_size, sizeof(uint8_t)),
 	};
 	return cpu;

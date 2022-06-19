@@ -15,31 +15,31 @@
 // sb sh sw
 #define opcode_store 0b0100011
 
-// addi srli srai slli slti sltiu xori ori andi
+// addi slti sltiu xori ori andi slli srli srai
 #define opcode_alu_and_shift_imm 0b0010011
 
-// add sub srl sra sll slt sltu xor or and
+// add sub sll slt sltu xor srl sra or and 
 #define opcode_alu_register 0b0110011
 
 // ecall ebreak csrrw csrrs csrrc csrrwi csrrsi csrrci
 #define opcode_e_and_system 0b1110011
 
-// beq jalr lb sb add addi sub
+// jalr beq lb sb addi add sub ecall ebreak
 #define funct3_000 0b000
 
-// bne lh sh sll slli csrrw
+// bne lh sh slli sll csrrw
 #define funct3_001 0b001
 
-// lw sw slt slti csrrs
+// lw sw slti slt csrrs
 #define funct3_010 0b010
 
-// sltu sltiu csrrc
+// sltiu sltu csrrc
 #define funct3_011 0b011
 
-// blt lbu xor xori  
+// blt lbu xori xor
 #define funct3_100 0b100
 
-// bge lhu srl srli sra srai csrrwi
+// bge lhu srli srai srl sra csrrwi
 #define funct3_101 0b101
 
 // bltu ori or csrrsi
@@ -48,8 +48,14 @@
 // bgeu andi and csrrci
 #define funct3_111 0b111
 
-// sll slli srl srli slt sltu add xor or and
+// slli srli add sll slt sltu xor or and srl
 #define funct7_0000000 0b0000000
 
-// sra srai sub 
+// srai sub sra
 #define funct7_0100000 0b0100000
+
+// ecall
+#define imm11_0_000000000000 0b000000000000
+
+// ebreak
+#define imm11_0_000000000001 0b000000000001

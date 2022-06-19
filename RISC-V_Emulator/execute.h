@@ -181,9 +181,8 @@ void execute_opcode_alu_and_shift_imm(instruction inst, riscv_cpu* cpu)
 
 		case funct3_011: // sltiu
 		{
-			uint32_t imm = (uint32_t)inst_i_imm(inst) & 0b00000000000000000000111111111111;
 			uint32_t rs1 = cpu->registers[inst.I.rs1] & 0b00000000000000000000111111111111;
-			cpu->registers[inst.I.rd] = rs1 < imm;
+			cpu->registers[inst.I.rd] = rs1 < inst.I.imm11_0;
 			cpu->program_counter = cpu->program_counter + 4;
 			break;
 		}
@@ -340,6 +339,72 @@ void execute_opcode_alu_register(instruction inst, riscv_cpu* cpu)
 	}
 }
 
+void execute_opcode_e_and_system(instruction inst, riscv_cpu* cpu)
+{
+	switch (inst.I.funct3)
+	{
+		case funct3_000: // ecall ebreak
+		{
+			switch (inst.I.imm11_0)
+			{
+				case imm11_0_000000000000: // ecall
+				{
+					break;
+				}
+
+				case imm11_0_000000000001: // ebreak
+				{
+					break;
+				}
+
+				default:
+					break;
+			}
+			break;
+		}
+
+		case funct3_001: // csrrw
+		{
+			cpu->registers[inst.I.rd] = cpu->csrs[inst.I.imm11_0];
+			cpu->csrs[inst.I.imm11_0] = cpu->registers[inst.I.rs1];
+			break;
+		}
+
+		case funct3_010: // csrrs
+		{
+			cpu->csrs[inst.I.imm11_0] = cpu->csrs[inst.I.imm11_0] | cpu->registers[inst.I.rs1];
+			break;
+		}
+
+		case funct3_011: // csrrc
+		{
+			cpu->csrs[inst.I.imm11_0] = cpu->csrs[inst.I.imm11_0] & (!cpu->registers[inst.I.rs1]);
+			break;
+		}
+
+		case funct3_101: // csrrwi
+		{
+			cpu->csrs[inst.I.imm11_0] = inst.I.rs1;
+			break;
+		}
+
+		case funct3_110: // csrrsi
+		{
+			cpu->csrs[inst.I.imm11_0] = cpu->csrs[inst.I.imm11_0] | inst.I.rs1;
+			break;
+		}
+
+		case funct3_111: // csrrci
+		{
+			cpu->csrs[inst.I.imm11_0] = cpu->csrs[inst.I.imm11_0] & (!inst.I.rs1);
+			break;
+		}
+
+		default:
+			break;
+	}
+}
+
 void execute_inst(instruction inst, riscv_cpu* cpu)
 {
 	switch (inst.opcode)
@@ -367,9 +432,10 @@ void execute_inst(instruction inst, riscv_cpu* cpu)
 
 		case opcode_jalr:
 		{
-			cpu->registers[inst.I.rd] = cpu->program_counter + 4;
+			uint32_t oldpc = cpu->program_counter + 4;
 			int32_t pc = (int32_t)cpu->registers[inst.I.rs1] + inst_i_imm(inst);
-			cpu->program_counter = (int32_t)(pc & (~1)); // 1111_1111_1111_1111_1111_1111_1111_1110
+			cpu->program_counter = pc & 0b11111111111111111111111111111110;
+			cpu->registers[inst.I.rd] = oldpc;
 			break;
 		}
 
@@ -405,6 +471,7 @@ void execute_inst(instruction inst, riscv_cpu* cpu)
 
 		case opcode_e_and_system:
 		{
+			execute_opcode_e_and_system(inst, cpu);
 			break;
 		}
 
