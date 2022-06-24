@@ -4,7 +4,8 @@
 #include <stdlib.h>
 #include <inttypes.h>
 
-#define memory_size 1024 * 1024 * 4
+#define memory_size 0xfffff
+#define stack_pointer 0xefff0
 
 typedef struct riscv_cpu
 {
@@ -71,6 +72,7 @@ void load_from_instructions(riscv_cpu* cpu, instruction inst_list[], uint32_t in
 	{
 		cpu->registers[i] = 0;
 	}
+	cpu->registers[2] = stack_pointer;
 	for (uint32_t i = 0; i < memory_size; i++)
 	{
 		cpu->memory[i] = 0;
@@ -80,4 +82,11 @@ void load_from_instructions(riscv_cpu* cpu, instruction inst_list[], uint32_t in
 		*memory_uint32(cpu, i * 4) = inst_list[i].bits;
 	}
 	*memory_uint32(cpu, inst_list_size * 4) = 0xDEADC0DE;
+}
+
+void load_and_run(riscv_cpu* cpu, instruction inst_list[], uint32_t inst_list_size)
+{
+	load_from_instructions(cpu, inst_list, inst_list_size);
+
+	run_riscv_cpu(cpu, inst_list_size);
 }

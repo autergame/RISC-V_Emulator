@@ -349,11 +349,14 @@ void execute_opcode_e_and_system(instruction inst, riscv_cpu* cpu)
 			{
 				case imm11_0_000000000000: // ecall
 				{
+					cpu->program_counter = cpu->program_counter + 4;
 					break;
 				}
 
 				case imm11_0_000000000001: // ebreak
 				{
+					__debugbreak();
+					cpu->program_counter = cpu->program_counter + 4;
 					break;
 				}
 
@@ -365,38 +368,44 @@ void execute_opcode_e_and_system(instruction inst, riscv_cpu* cpu)
 
 		case funct3_001: // csrrw
 		{
-			cpu->registers[inst.I.rd] = cpu->csrs[inst.I.imm11_0];
+			cpu->registers[inst.I.rd] = (uint32_t)cpu->csrs[inst.I.imm11_0];
 			cpu->csrs[inst.I.imm11_0] = cpu->registers[inst.I.rs1];
+			cpu->program_counter = cpu->program_counter + 4;
 			break;
 		}
 
 		case funct3_010: // csrrs
 		{
 			cpu->csrs[inst.I.imm11_0] = cpu->csrs[inst.I.imm11_0] | cpu->registers[inst.I.rs1];
+			cpu->program_counter = cpu->program_counter + 4;
 			break;
 		}
 
 		case funct3_011: // csrrc
 		{
 			cpu->csrs[inst.I.imm11_0] = cpu->csrs[inst.I.imm11_0] & (!cpu->registers[inst.I.rs1]);
+			cpu->program_counter = cpu->program_counter + 4;
 			break;
 		}
 
 		case funct3_101: // csrrwi
 		{
 			cpu->csrs[inst.I.imm11_0] = inst.I.rs1;
+			cpu->program_counter = cpu->program_counter + 4;
 			break;
 		}
 
 		case funct3_110: // csrrsi
 		{
 			cpu->csrs[inst.I.imm11_0] = cpu->csrs[inst.I.imm11_0] | inst.I.rs1;
+			cpu->program_counter = cpu->program_counter + 4;
 			break;
 		}
 
 		case funct3_111: // csrrci
 		{
 			cpu->csrs[inst.I.imm11_0] = cpu->csrs[inst.I.imm11_0] & (!inst.I.rs1);
+			cpu->program_counter = cpu->program_counter + 4;
 			break;
 		}
 
