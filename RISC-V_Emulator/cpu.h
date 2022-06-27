@@ -5,7 +5,7 @@
 #include <inttypes.h>
 
 #define memory_size 0xfffff
-#define stack_pointer 0xefff0
+#define stack_pointer 0xf8000
 
 typedef struct riscv_cpu
 {
@@ -61,7 +61,7 @@ void destroy_riscv_cpu(riscv_cpu* cpu)
 	free(cpu->memory);
 }
 
-void load_from_instructions(riscv_cpu* cpu, instruction inst_list[], uint32_t inst_list_size)
+void reset_riscv_cpu(riscv_cpu* cpu)
 {
 	cpu->program_counter = 0;
 	for (uint32_t i = 0; i < 4096; i++)
@@ -77,6 +77,11 @@ void load_from_instructions(riscv_cpu* cpu, instruction inst_list[], uint32_t in
 	{
 		cpu->memory[i] = 0;
 	}
+}
+
+void load_from_instructions(riscv_cpu* cpu, instruction inst_list[], uint32_t inst_list_size)
+{
+	reset_riscv_cpu(cpu);
 	for (uint32_t i = 0; i < inst_list_size; i++)
 	{
 		*memory_uint32(cpu, i * 4) = inst_list[i].bits;
