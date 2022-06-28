@@ -3,7 +3,7 @@
 #include "types.h"
 #include "imm_enc_dec.h"
 
-void execute_opcode_branch(instruction inst, riscv_cpu* cpu)
+void execute_opcode_branch(const instruction inst, riscv_cpu* cpu)
 {
 	switch (inst.B.funct3)
 	{
@@ -70,7 +70,7 @@ void execute_opcode_branch(instruction inst, riscv_cpu* cpu)
 	}
 }
 
-void execute_opcode_load(instruction inst, riscv_cpu* cpu)
+void execute_opcode_load(const instruction inst, riscv_cpu* cpu)
 {
 	switch (inst.I.funct3)
 	{
@@ -121,7 +121,7 @@ void execute_opcode_load(instruction inst, riscv_cpu* cpu)
 	}
 }
 
-void execute_opcode_store(instruction inst, riscv_cpu* cpu)
+void execute_opcode_store(const instruction inst, riscv_cpu* cpu)
 {
 	switch (inst.S.funct3)
 	{
@@ -154,7 +154,7 @@ void execute_opcode_store(instruction inst, riscv_cpu* cpu)
 	}
 }
 
-void execute_opcode_alu_and_shift_imm(instruction inst, riscv_cpu* cpu)
+void execute_opcode_alu_and_shift_imm(const instruction inst, riscv_cpu* cpu)
 {
 	switch (inst.I.funct3)
 	{
@@ -238,7 +238,7 @@ void execute_opcode_alu_and_shift_imm(instruction inst, riscv_cpu* cpu)
 	}
 }
 
-void execute_opcode_alu_register(instruction inst, riscv_cpu* cpu)
+void execute_opcode_alu_register(const instruction inst, riscv_cpu* cpu)
 {
 	switch (inst.R.funct3)
 	{
@@ -339,7 +339,7 @@ void execute_opcode_alu_register(instruction inst, riscv_cpu* cpu)
 	}
 }
 
-void execute_opcode_e_and_system(instruction inst, riscv_cpu* cpu)
+void execute_opcode_e_and_system(const instruction inst, riscv_cpu* cpu)
 {
 	switch (inst.I.funct3)
 	{
@@ -414,7 +414,7 @@ void execute_opcode_e_and_system(instruction inst, riscv_cpu* cpu)
 	}
 }
 
-void execute_inst(instruction inst, riscv_cpu* cpu)
+void execute_inst(const instruction inst, riscv_cpu* cpu)
 {
 	switch (inst.opcode)
 	{

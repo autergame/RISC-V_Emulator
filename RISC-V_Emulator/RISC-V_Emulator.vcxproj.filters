@@ -44,5 +44,8 @@
     <ClInclude Include="tests_inst.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="assembler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

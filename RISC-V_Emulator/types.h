@@ -89,7 +89,8 @@
 #define r_t2 0b00111
 
 // saved register / frame pointer
-#define r_s0fp 0b01000
+#define r_s0 0b01000
+#define r_fp 0b01000
 
 // saved register
 #define r_s1 0b01001

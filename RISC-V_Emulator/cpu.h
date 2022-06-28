@@ -15,12 +15,12 @@ typedef struct riscv_cpu
 	uint32_t program_counter;
 } riscv_cpu;
 
-uint32_t* memory_uint32(riscv_cpu* cpu, uint32_t address)
+uint32_t* memory_uint32(riscv_cpu* cpu, const uint32_t address)
 {
 	return ((uint32_t*)(cpu->memory + address));
 }
 
-uint16_t* memory_uint16(riscv_cpu* cpu, uint32_t address)
+uint16_t* memory_uint16(riscv_cpu* cpu, const uint32_t address)
 {
 	return ((uint16_t*)(cpu->memory + address));
 }
@@ -38,7 +38,7 @@ riscv_cpu create_riscv_cpu()
 	return cpu;
 }
 
-void run_riscv_cpu(riscv_cpu* cpu, uint32_t inst_list_size)
+void run_riscv_cpu(riscv_cpu* cpu, const uint32_t inst_list_size)
 {
 	while (1)
 	{
@@ -55,7 +55,7 @@ void run_riscv_cpu(riscv_cpu* cpu, uint32_t inst_list_size)
 	}
 }
 
-void destroy_riscv_cpu(riscv_cpu* cpu)
+void destroy_riscv_cpu(const riscv_cpu* cpu)
 {
 	free(cpu->csrs);
 	free(cpu->memory);
@@ -79,7 +79,7 @@ void reset_riscv_cpu(riscv_cpu* cpu)
 	}
 }
 
-void load_from_instructions(riscv_cpu* cpu, instruction inst_list[], uint32_t inst_list_size)
+void load_from_instructions(riscv_cpu* cpu, const instruction inst_list[], const uint32_t inst_list_size)
 {
 	reset_riscv_cpu(cpu);
 	for (uint32_t i = 0; i < inst_list_size; i++)
@@ -89,7 +89,7 @@ void load_from_instructions(riscv_cpu* cpu, instruction inst_list[], uint32_t in
 	*memory_uint32(cpu, inst_list_size * 4) = 0xDEADC0DE;
 }
 
-void load_and_run(riscv_cpu* cpu, instruction inst_list[], uint32_t inst_list_size)
+void load_and_run(riscv_cpu* cpu, const instruction inst_list[], const uint32_t inst_list_size)
 {
 	load_from_instructions(cpu, inst_list, inst_list_size);
 
