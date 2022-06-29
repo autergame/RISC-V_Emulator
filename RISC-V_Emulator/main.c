@@ -11,14 +11,19 @@
 int main(const int argc, const char* argv[])
 {
 	const char insts[] =
-		"jal zero, 28\n" //jump to main
-			"bge a2, zero, 12\n" //abs
+		"###"
+		"\n\n\n"
+		"#test1\n"
+		"\n#test2"
+		"\n#test3\n"
+		"jal zero, 28 #jump to main \n"
+			"bge a2, zero, 12 #abs \n"
 			"sub a0, zero, a2\n"
 			"jalr zero, ra, 0\n"
 			"addi a0, a2, 0\n"
 			"jalr zero, ra, 0\n"
-		"ebreak\n"
-			"addi sp, sp, -16\n" //main
+		"ebreak #main \n"
+			"addi sp, sp, -16\n"
 			"sw sp, ra, 12\n"
 			"sw sp, a0, 8\n"
 			"sw sp, a2, 4\n"
@@ -26,7 +31,7 @@ int main(const int argc, const char* argv[])
 			"addi fp, sp, 16\n"
 		"ebreak\n"
 				"addi a2, zero, -5\n"
-					"jal ra, -56\n" //jump to abs
+					"jal ra, -56 #jump to abs \n"
 				"addi a0, a0, 5\n"
 		"ebreak\n"
 			"lw ra, sp, 12\n"
@@ -43,7 +48,7 @@ int main(const int argc, const char* argv[])
 			"addi fp, sp, 16\n"
 		"ebreak\n"
 				"addi a2, zero, 5\n"
-					"jal ra, -124\n" //jump to abs
+					"jal ra, -124 #jump to abs \n"
 				"addi a0, a0, -5\n"
 		"ebreak\n"
 			"lw ra, sp, 12\n"
