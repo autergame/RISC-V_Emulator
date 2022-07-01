@@ -20,25 +20,6 @@ static const char* keywords[] = {
 };
 static const int keywords_size = array_size(keywords);
 
-typedef enum inst_types {
-	inst_R, inst_I, inst_Shift, inst_S, inst_B, inst_U, inst_J, inst_E
-} inst_types;
-
-static const inst_types opcode_type[] = {
-	inst_U, inst_U,
-	inst_J, inst_I,
-	inst_B, inst_B, inst_B, inst_B, inst_B, inst_B,
-	inst_I, inst_I, inst_I, inst_I, inst_I, inst_S, inst_S, inst_S,
-	inst_I, inst_I, inst_I, inst_I, inst_I, inst_I, inst_Shift, inst_Shift, inst_Shift,
-	inst_R, inst_R, inst_R, inst_R, inst_R, inst_R, inst_R, inst_R, inst_R, inst_R,
-	inst_E, inst_E,
-	inst_I, inst_I ,inst_I, inst_I, inst_I, inst_I
-};
-
-typedef instruction(*inst_funct_0_args)();
-typedef instruction(*inst_funct_2_args)(uint32_t, uint32_t);
-typedef instruction(*inst_funct_3_args)(uint32_t, uint32_t, uint32_t);
-
 static const void* opcode_functs[] = {
 	&inst_lui, &inst_auipc,
 	&inst_jal, &inst_jalr,
@@ -49,6 +30,10 @@ static const void* opcode_functs[] = {
 	&inst_ecall, &inst_ebreak,
 	&inst_csrrw, &inst_csrrs, &inst_csrrc, &inst_csrrwi, &inst_csrrsi, &inst_csrrci
 };
+
+typedef instruction(*inst_funct_0_args)();
+typedef instruction(*inst_funct_2_args)(uint32_t, uint32_t);
+typedef instruction(*inst_funct_3_args)(uint32_t, uint32_t, uint32_t);
 
 static const char* registers[] = {
 	"zero",
@@ -91,26 +76,44 @@ int string_is_in_list(const char* list[], const int list_size, const char* strin
 
 uint32_t hex_or_decimal_from_string(const char* string)
 {
-	uint32_t sum = 0;
 	size_t string_len = strlen(string);
+	if (string_len == 0)
+		return 0;
 
-	if (string_len >= 2 && (string[0] == '0' && (string[1] == 'x' || string[1] == 'X'))) // hex
+	int negative = 0;
+	if (string[0] == '-')
 	{
-		sum = strtoul(string, NULL, 16);
+		string++;
+		negative = 1;
+		string_len -= 1;
 	}
-	else // decimal
+
+	uint32_t sum = 0;
+
+	if (string_len >= 1)
 	{
-		sum = strtol(string, NULL, 10);
+		if (string_len > 2 && (string[0] == '0' && (string[1] == 'x' || string[1] == 'X'))) // hex
+		{
+			sum = strtoul(string, NULL, 16);
+		}
+		else // decimal
+		{
+			sum = strtol(string, NULL, 10);
+		}
+
+		if (negative)
+			sum = -((int32_t)sum);
 	}
 
 	return sum;
 }
 
-void string_copy_limited(char** destination, const char* source, const int string_len)
+char* string_copy_limited(const char* source, const int string_len)
 {
-	*destination = (char*)calloc(string_len + 1, sizeof(char));
-	memcpy(*destination, source, string_len);
-	(*destination)[string_len] = '\0';
+	char* destination = (char*)calloc(string_len + 1, sizeof(char));
+	memcpy(destination, source, string_len);
+	destination[string_len] = '\0';
+	return destination;
 }
 
 uint32_t* assemble(const char* insts, const int inst_size, int* compiled_insts_size)
@@ -130,24 +133,23 @@ uint32_t* assemble(const char* insts, const int inst_size, int* compiled_insts_s
 
 	while (string_pointer < inst_size)
 	{
-		int string_len = strcspn(&insts[string_pointer], "\n");
+		int string_len = strcspn(insts + string_pointer, "\n");
 
 		if (string_len != 0)
-		{
-			int string_len_old = string_len;
-			int string_len_comment = strcspn(&insts[string_pointer], "#\n");
+		{			
+			int string_len_comment = strcspn(insts + string_pointer, "#\n");
 
 			if (insts[string_pointer] != '#')
 			{
-				if (string_len_comment != string_len)
-					string_len = string_len_comment;
+				int string_len_ignore = string_len;
 
-				string_copy_limited(&inst_splitted[split_pointer], &insts[string_pointer], string_len);
+				if (string_len_comment != string_len)
+					string_len_ignore = string_len_comment;
+
+				inst_splitted[split_pointer] = string_copy_limited(insts + string_pointer, string_len_ignore);
 
 				split_pointer++;
 			}
-
-			string_len = string_len_old;
 		}
 
 		string_pointer += string_len + 1;
@@ -175,13 +177,14 @@ uint32_t* assemble(const char* insts, const int inst_size, int* compiled_insts_s
 
 	for (int i = 0; i < newline_count; i++)
 	{
-		for (size_t string_pointer = 0; string_pointer < strlen(inst_splitted[i]);)
+		size_t string_pointer = 0;
+		while (string_pointer < strlen(inst_splitted[i]))
 		{
-			int string_len = strcspn(&inst_splitted[i][string_pointer], " ,");
+			int string_len = strcspn(inst_splitted[i] + string_pointer, " ,\t");
 
 			if (string_len != 0)
 			{
-				string_copy_limited(&tokens[token_pointer], &inst_splitted[i][string_pointer], string_len);
+				tokens[token_pointer] = string_copy_limited(inst_splitted[i] + string_pointer, string_len);
 
 				token_pointer += 1;
 			}
@@ -190,140 +193,272 @@ uint32_t* assemble(const char* insts, const int inst_size, int* compiled_insts_s
 		}
 	}
 
+	tokens_count = token_pointer;
+
+
 	int compiled_insts_pointer = 0;
 	uint32_t* compiled_insts = (uint32_t*)calloc(newline_count, sizeof(uint32_t));
+
+	typedef struct label_node 
+	{
+		char* key;
+		int value;
+		struct label_node* node;
+	} label_node;
+
+	int pointer_for_label = 0;
+	label_node* linked_main = NULL;
+
+	for (int i = 0; i < tokens_count; i++)
+	{
+		char* token = tokens[i];
+
+		size_t string_len = strlen(token);
+		if (token[string_len - 1] == ':')
+		{
+			label_node* new_linked = (label_node*)calloc(1, sizeof(label_node));
+
+			new_linked->key = string_copy_limited(token, string_len - 1);
+			new_linked->value = pointer_for_label * 4;
+			new_linked->node = linked_main;
+
+			linked_main = new_linked;
+		}
+
+		int opcode = string_is_in_list(keywords, keywords_size, token);
+		if (opcode != -1)
+			pointer_for_label += 1;
+	}
 
 	for (int i = 0; i < tokens_count; i++)
 	{
 		char* token_1 = tokens[i];
 		int opcode = string_is_in_list(keywords, keywords_size, token_1);
 
-		switch (opcode_type[opcode])
+		if (opcode != -1)
 		{
-			case inst_U:
-			case inst_J:
+			switch (opcode)
 			{
-				char* token_2 = tokens[++i];
-				int rd = string_is_in_list(registers, registers_size, token_2);
-
-				if (rd != -1)
+				// U
+				case 0: // lui
+				case 1: // auipc
 				{
-					char* token_3 = tokens[++i];
-					uint32_t imm = hex_or_decimal_from_string(token_3);
+					char* token_2 = tokens[++i];
+					int rd = string_is_in_list(registers, registers_size, token_2);
 
-					inst_funct_2_args inst_func = (inst_funct_2_args)opcode_functs[opcode];
+					if (rd != -1)
+					{
+						char* token_3 = tokens[++i];
+						uint32_t imm = hex_or_decimal_from_string(token_3);
 
-					instruction inst = inst_func(registers_index[rd], imm);
-					compiled_insts[compiled_insts_pointer] = inst.bits;
+						inst_funct_2_args inst_func = (inst_funct_2_args)opcode_functs[opcode];
 
-					compiled_insts_pointer += 1;
+						instruction inst = inst_func(registers_index[rd], imm);
+						compiled_insts[compiled_insts_pointer] = inst.bits;
+
+						compiled_insts_pointer += 1;
+					}
+
+					break;
 				}
 
-				break;
-			}
-
-			case inst_R:
-			{
-				char* token_2 = tokens[++i];
-				int rd = string_is_in_list(registers, registers_size, token_2);
-
-				if (rd != -1)
+				// J
+				case 2: // jal
 				{
-					char* token_3 = tokens[++i];
-					int rs1 = string_is_in_list(registers, registers_size, token_3);
+					char* token_2 = tokens[++i];
+					int rd = string_is_in_list(registers, registers_size, token_2);
 
-					if (rs1 != -1)
+					if (rd != -1)
 					{
-						char* token_4 = tokens[++i];
-						int rs2 = string_is_in_list(registers, registers_size, token_4);
+						char* token_3 = tokens[++i];
 
-						if (rs2)
+						uint32_t imm = 0;
+
+						label_node* current = linked_main;
+						while (current != NULL)
 						{
+							if (strcmp(current->key, token_3) == 0)
+							{
+								imm = current->value;
+								break;
+							}
+							current = current->node;
+						}
+
+						if (current == NULL)
+						{
+							imm = hex_or_decimal_from_string(token_3);
+						}
+						else
+						{
+							uint32_t insts_pointer = compiled_insts_pointer * 4;
+							if (imm < insts_pointer)
+								imm = -((int32_t)(insts_pointer - imm));
+						}
+
+						inst_funct_2_args inst_func = (inst_funct_2_args)opcode_functs[opcode];
+
+						instruction inst = inst_func(registers_index[rd], imm);
+						compiled_insts[compiled_insts_pointer] = inst.bits;
+
+						compiled_insts_pointer += 1;
+					}
+
+					break;
+				}
+				
+				// R
+				case 27: // add
+				case 28: // sub
+				case 29: // sll
+				case 30: // slt
+				case 31: // sltu
+				case 32: // xor
+				case 33: // srl
+				case 34: // sra
+				case 35: // or
+				case 36: // and
+				{
+					char* token_2 = tokens[++i];
+					int rd = string_is_in_list(registers, registers_size, token_2);
+
+					if (rd != -1)
+					{
+						char* token_3 = tokens[++i];
+						int rs1 = string_is_in_list(registers, registers_size, token_3);
+
+						if (rs1 != -1)
+						{
+							char* token_4 = tokens[++i];
+							int rs2 = string_is_in_list(registers, registers_size, token_4);
+
+							if (rs2)
+							{
+								inst_funct_3_args inst_func = (inst_funct_3_args)opcode_functs[opcode];
+
+								instruction inst = inst_func(registers_index[rd],
+									registers_index[rs1], registers_index[rs2]);
+								compiled_insts[compiled_insts_pointer] = inst.bits;
+
+								compiled_insts_pointer += 1;
+							}
+						}
+					}
+
+					break;
+				}
+
+				// I
+				case 3: // jalr
+				case 10: // lb
+				case 11: // lh
+				case 12: // lw
+				case 13: // lbu
+				case 14: // lhu
+				case 18: // addi
+				case 19: // slti
+				case 20: // sltiu
+				case 21: // xori
+				case 22: // ori
+				case 23: // andi
+				// Shift
+				case 24: // slli
+				case 25: // srli
+				case 26: // srai
+				{
+					char* token_2 = tokens[++i];
+					int rd = string_is_in_list(registers, registers_size, token_2);
+
+					if (rd != -1)
+					{
+						char* token_3 = tokens[++i];
+						int rs1 = string_is_in_list(registers, registers_size, token_3);
+
+						if (rs1 != -1)
+						{
+							char* token_4 = tokens[++i];
+							uint32_t imm = hex_or_decimal_from_string(token_4);
+
 							inst_funct_3_args inst_func = (inst_funct_3_args)opcode_functs[opcode];
 
-							instruction inst = inst_func(registers_index[rd],
-								registers_index[rs1], registers_index[rs2]);
+							instruction inst = inst_func(registers_index[rd], registers_index[rs1], imm);
 							compiled_insts[compiled_insts_pointer] = inst.bits;
 
 							compiled_insts_pointer += 1;
 						}
 					}
+
+					break;
 				}
 
-				break;
-			}
-
-			case inst_I:
-			case inst_Shift:
-			{
-				char* token_2 = tokens[++i];
-				int rd = string_is_in_list(registers, registers_size, token_2);
-
-				if (rd != -1)
+				// B
+				case 4: // beq
+				case 5: // bne
+				case 6: // blt
+				case 7: // bge
+				case 8: // bltu
+				case 9: // bgeu
+				// S
+				case 15: // sb
+				case 16: // sh
+				case 17: // sw
 				{
-					char* token_3 = tokens[++i];
-					int rs1 = string_is_in_list(registers, registers_size, token_3);
+					char* token_2 = tokens[++i];
+					int rs1 = string_is_in_list(registers, registers_size, token_2);
 
 					if (rs1 != -1)
 					{
-						char* token_4 = tokens[++i];
-						uint32_t imm = hex_or_decimal_from_string(token_4);
+						char* token_3 = tokens[++i];
+						int rs2 = string_is_in_list(registers, registers_size, token_3);
 
-						inst_funct_3_args inst_func = (inst_funct_3_args)opcode_functs[opcode];
+						if (rs2 != -1)
+						{
+							char* token_4 = tokens[++i];
+							uint32_t imm = hex_or_decimal_from_string(token_4);
 
-						instruction inst = inst_func(registers_index[rd], registers_index[rs1], imm);
-						compiled_insts[compiled_insts_pointer] = inst.bits;
+							inst_funct_3_args inst_func = (inst_funct_3_args)opcode_functs[opcode];
 
-						compiled_insts_pointer += 1;
+							instruction inst = inst_func(registers_index[rs1], registers_index[rs2], imm);
+							compiled_insts[compiled_insts_pointer] = inst.bits;
+
+							compiled_insts_pointer += 1;
+						}
 					}
+
+					break;
 				}
-
-				break;
-			}
-
-			case inst_S:
-			case inst_B:
-			{
-				char* token_2 = tokens[++i];
-				int rs1 = string_is_in_list(registers, registers_size, token_2);
-
-				if (rs1 != -1)
+				
+				// E
+				case 37: // ecall
+				case 38: // ebreak
 				{
-					char* token_3 = tokens[++i];
-					int rs2 = string_is_in_list(registers, registers_size, token_3);
+					inst_funct_0_args inst_func = (inst_funct_0_args)opcode_functs[opcode];
 
-					if (rs2 != -1)
-					{
-						char* token_4 = tokens[++i];
-						uint32_t imm = hex_or_decimal_from_string(token_4);
+					instruction inst = inst_func();
+					compiled_insts[compiled_insts_pointer] = inst.bits;
 
-						inst_funct_3_args inst_func = (inst_funct_3_args)opcode_functs[opcode];
+					compiled_insts_pointer += 1;
 
-						instruction inst = inst_func(registers_index[rs1], registers_index[rs2], imm);
-						compiled_insts[compiled_insts_pointer] = inst.bits;
-
-						compiled_insts_pointer += 1;
-					}
+					break;
 				}
 
-				break;
+				default:
+					break;
 			}
-
-			case inst_E:
-			{
-				inst_funct_0_args inst_func = (inst_funct_0_args)opcode_functs[opcode];
-
-				instruction inst = inst_func();
-				compiled_insts[compiled_insts_pointer] = inst.bits;
-
-				compiled_insts_pointer += 1;
-
-				break;
-			}
-
-			default:
-				break;
 		}
+		else
+		{
+			printf("Skipping unknown opcode keyword: %s\n", token_1);
+		}
+	}
+
+	label_node* current = linked_main;
+	while (current != NULL)
+	{
+		label_node* tmp = current->node;
+		free(current->key);
+		free(current);
+		current = tmp;
 	}
 
 	for (int i = 0; i < tokens_count; i++)

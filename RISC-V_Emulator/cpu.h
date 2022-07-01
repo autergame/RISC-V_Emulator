@@ -38,7 +38,7 @@ riscv_cpu create_riscv_cpu()
 	return cpu;
 }
 
-void run_riscv_cpu(riscv_cpu* cpu, const uint32_t inst_list_size)
+void run_riscv_cpu(riscv_cpu* cpu)
 {
 	while (1)
 	{
@@ -93,5 +93,5 @@ void load_and_run(riscv_cpu* cpu, const instruction inst_list[], const uint32_t 
 {
 	load_from_instructions(cpu, inst_list, inst_list_size);
 
-	run_riscv_cpu(cpu, inst_list_size);
+	run_riscv_cpu(cpu);
 }
