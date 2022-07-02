@@ -25,6 +25,31 @@ uint16_t* memory_uint16(riscv_cpu* cpu, const uint32_t address)
 	return ((uint16_t*)(cpu->memory + address));
 }
 
+static const char* registers_dump[] = {
+	"zero",
+	"ra",
+	"sp", "gp", "tp",
+	"t0", "t1", "t2",
+	"s0/fp",
+	"s1",
+	"a0", "a1",
+	"a2", "a3", "a4", "a5", "a6", "a7",
+	"s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9", "s10", "s11",
+	"t3", "t4", "t5", "t6"
+};
+
+void dump_registers(riscv_cpu* cpu)
+{
+	printf("\npc = %u 0x%08X\n", cpu->program_counter, cpu->program_counter);
+	for (int i = 0; i < 32; i++)
+	{
+		uint32_t u32 = cpu->registers[i];
+		int32_t i32 = (int32_t)u32;
+
+		printf("x%-2d %5s: 0x%08X %10u %11d\n", i, registers_dump[i], u32, u32, i32);
+	}
+}
+
 #include "execute.h"
 
 riscv_cpu create_riscv_cpu()
