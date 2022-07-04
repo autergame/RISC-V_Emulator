@@ -5,6 +5,8 @@
 #include "cpu.h"
 #include "inst_defs.h"
 
+#define array_size(v_array) (sizeof(v_array) / sizeof(v_array[0]))
+
 void test_lui(riscv_cpu* cpu)
 {
 	instruction inst_list[] =
@@ -14,9 +16,11 @@ void test_lui(riscv_cpu* cpu)
 		inst_add(r_t2, r_t0, r_t1)
 	};
 
-	uint32_t inst_list_size = sizeof(inst_list) / sizeof(inst_list[0]);
+	uint32_t inst_list_size = array_size(inst_list);
 
-	load_and_run(cpu, inst_list, inst_list_size);
+	load_from_instructions(cpu, inst_list, inst_list_size);
+
+	run_riscv_cpu(cpu);
 
 	assert(cpu->registers[r_t0] == 0x123);
 	assert(cpu->registers[r_t1] == 0x12345000);
@@ -31,9 +35,11 @@ void test_auipc(riscv_cpu* cpu)
 		inst_add(r_t2, r_t0, r_t1)    // 0x12345127
 	};
 
-	uint32_t inst_list_size = sizeof(inst_list) / sizeof(inst_list[0]);
+	uint32_t inst_list_size = array_size(inst_list);
 
-	load_and_run(cpu, inst_list, inst_list_size);
+	load_from_instructions(cpu, inst_list, inst_list_size);
+
+	run_riscv_cpu(cpu);
 
 	assert(cpu->registers[r_t0] == 0x123);
 	assert(cpu->registers[r_t1] == 0x12345004);
@@ -54,9 +60,11 @@ void test_jal(riscv_cpu* cpu)
 		inst_addi(r_t3, r_t3, 873),   // 0x6de
 	};
 
-	uint32_t inst_list_size = sizeof(inst_list) / sizeof(inst_list[0]);
+	uint32_t inst_list_size = array_size(inst_list);
 
-	load_and_run(cpu, inst_list, inst_list_size);
+	load_from_instructions(cpu, inst_list, inst_list_size);
+
+	run_riscv_cpu(cpu);
 
 	assert(cpu->registers[r_t0] == 0x246);
 	assert(cpu->registers[r_t1] == 0x369);
@@ -78,9 +86,11 @@ void test_jalr(riscv_cpu* cpu)
 		inst_addi(r_t4, r_t4, 873),   // 0x6e2
 	};
 
-	uint32_t inst_list_size = sizeof(inst_list) / sizeof(inst_list[0]);
+	uint32_t inst_list_size = array_size(inst_list);
 
-	load_and_run(cpu, inst_list, inst_list_size);
+	load_from_instructions(cpu, inst_list, inst_list_size);
+
+	run_riscv_cpu(cpu);
 
 	assert(cpu->registers[r_t0] == 0x246);
 	assert(cpu->registers[r_t1] == 0x369);
@@ -103,9 +113,11 @@ void test_beq(riscv_cpu* cpu)
 		inst_add(r_t2, r_t0, r_t1)    // 0x369
 	};
 
-	uint32_t inst_list_size = sizeof(inst_list) / sizeof(inst_list[0]);
+	uint32_t inst_list_size = array_size(inst_list);
 
-	load_and_run(cpu, inst_list, inst_list_size);
+	load_from_instructions(cpu, inst_list, inst_list_size);
+
+	run_riscv_cpu(cpu);
 
 	assert(cpu->registers[r_t0] == 0x123);
 	assert(cpu->registers[r_t1] == 0x246);
@@ -124,9 +136,11 @@ void test_bne(riscv_cpu* cpu)
 		inst_add(r_t2, r_t0, r_t1)    // 0x48c
 	};
 
-	uint32_t inst_list_size = sizeof(inst_list) / sizeof(inst_list[0]);
+	uint32_t inst_list_size = array_size(inst_list);
 
-	load_and_run(cpu, inst_list, inst_list_size);
+	load_from_instructions(cpu, inst_list, inst_list_size);
+
+	run_riscv_cpu(cpu);
 
 	assert(cpu->registers[r_t0] == 0x246);
 	assert(cpu->registers[r_t1] == 0x246);
@@ -145,9 +159,11 @@ void test_blt(riscv_cpu* cpu)
 		inst_add(r_t2, r_t0, r_t1)    // 0x48c
 	};
 
-	uint32_t inst_list_size = sizeof(inst_list) / sizeof(inst_list[0]);
+	uint32_t inst_list_size = array_size(inst_list);
 
-	load_and_run(cpu, inst_list, inst_list_size);
+	load_from_instructions(cpu, inst_list, inst_list_size);
+
+	run_riscv_cpu(cpu);
 
 	assert(cpu->registers[r_t0] == 0x246);
 	assert(cpu->registers[r_t1] == 0x246);
@@ -167,9 +183,11 @@ void test_bge(riscv_cpu* cpu)
 		inst_add(r_t2, r_t0, r_t1)      // 0x369
 	};
 
-	uint32_t inst_list_size = sizeof(inst_list) / sizeof(inst_list[0]);
+	uint32_t inst_list_size = array_size(inst_list);
 
-	load_and_run(cpu, inst_list, inst_list_size);
+	load_from_instructions(cpu, inst_list, inst_list_size);
+
+	run_riscv_cpu(cpu);
 
 	assert(cpu->registers[r_t0] == 0x123);
 	assert(cpu->registers[r_t1] == 0x246);
@@ -188,9 +206,11 @@ void test_bltu(riscv_cpu* cpu)
 		inst_add(r_t2, r_t0, r_t1)     // 0x108c
 	};
 
-	uint32_t inst_list_size = sizeof(inst_list) / sizeof(inst_list[0]);
+	uint32_t inst_list_size = array_size(inst_list);
 
-	load_and_run(cpu, inst_list, inst_list_size);
+	load_from_instructions(cpu, inst_list, inst_list_size);
+
+	run_riscv_cpu(cpu);
 
 	assert(cpu->registers[r_t0] == 0x646);
 	assert(cpu->registers[r_t1] == 0xa46);
@@ -209,9 +229,11 @@ void test_bgeu(riscv_cpu* cpu)
 		inst_add(r_t2, r_t0, r_t1)     // 0x108c
 	};
 
-	uint32_t inst_list_size = sizeof(inst_list) / sizeof(inst_list[0]);
+	uint32_t inst_list_size = array_size(inst_list);
 
-	load_and_run(cpu, inst_list, inst_list_size);
+	load_from_instructions(cpu, inst_list, inst_list_size);
+
+	run_riscv_cpu(cpu);
 
 	assert(cpu->registers[r_t0] == 0x646);
 	assert(cpu->registers[r_t1] == 0xa46);
@@ -233,9 +255,11 @@ void test_lbsb(riscv_cpu* cpu)
 		inst_lb(r_t2, r_t0, 8),        // 0x008
 	};
 
-	uint32_t inst_list_size = sizeof(inst_list) / sizeof(inst_list[0]);
+	uint32_t inst_list_size = array_size(inst_list);
 
-	load_and_run(cpu, inst_list, inst_list_size);
+	load_from_instructions(cpu, inst_list, inst_list_size);
+
+	run_riscv_cpu(cpu);
 
 	assert(cpu->registers[r_t0] == 0x00c);
 	assert(cpu->registers[r_t1] == 0xffffff81);
@@ -255,9 +279,11 @@ void test_lhsh(riscv_cpu* cpu)
 		inst_lh(r_t2, r_t0, 12),     // 0x00c
 	};
 
-	uint32_t inst_list_size = sizeof(inst_list) / sizeof(inst_list[0]);
+	uint32_t inst_list_size = array_size(inst_list);
 
-	load_and_run(cpu, inst_list, inst_list_size);
+	load_from_instructions(cpu, inst_list, inst_list_size);
+
+	run_riscv_cpu(cpu);
 
 	assert(cpu->registers[r_t0] == 0x00c);
 	assert(cpu->registers[r_t1] == 0x8001);
@@ -277,9 +303,11 @@ void test_lwsw(riscv_cpu* cpu)
 		inst_lw(r_t2, r_t0, 12),        // 0x00c
 	};
 
-	uint32_t inst_list_size = sizeof(inst_list) / sizeof(inst_list[0]);
+	uint32_t inst_list_size = array_size(inst_list);
 
-	load_and_run(cpu, inst_list, inst_list_size);
+	load_from_instructions(cpu, inst_list, inst_list_size);
+
+	run_riscv_cpu(cpu);
 
 	assert(cpu->registers[r_t0] == 0x00c);
 	assert(cpu->registers[r_t1] == 0x80000001);
@@ -297,9 +325,11 @@ void test_lbu(riscv_cpu* cpu)
 		inst_lbu(r_t2, r_t0, 8),      // 0x008
 	};
 
-	uint32_t inst_list_size = sizeof(inst_list) / sizeof(inst_list[0]);
+	uint32_t inst_list_size = array_size(inst_list);
 
-	load_and_run(cpu, inst_list, inst_list_size);
+	load_from_instructions(cpu, inst_list, inst_list_size);
+
+	run_riscv_cpu(cpu);
 
 	assert(cpu->registers[r_t0] == 0x00c);
 	assert(cpu->registers[r_t1] == 0xff);
@@ -319,9 +349,11 @@ void test_lhu(riscv_cpu* cpu)
 		inst_lhu(r_t2, r_t0, 12),    // 0x00c
 	};
 
-	uint32_t inst_list_size = sizeof(inst_list) / sizeof(inst_list[0]);
+	uint32_t inst_list_size = array_size(inst_list);
 
-	load_and_run(cpu, inst_list, inst_list_size);
+	load_from_instructions(cpu, inst_list, inst_list_size);
+
+	run_riscv_cpu(cpu);
 
 	assert(cpu->registers[r_t0] == 0x00c);
 	assert(cpu->registers[r_t1] == 0xffff);
@@ -340,9 +372,11 @@ void test_addi(riscv_cpu* cpu)
 		inst_addi(r_t1, r_t0, 582),   // 0x246
 	};
 
-	uint32_t inst_list_size = sizeof(inst_list) / sizeof(inst_list[0]);
+	uint32_t inst_list_size = array_size(inst_list);
 
-	load_and_run(cpu, inst_list, inst_list_size);
+	load_from_instructions(cpu, inst_list, inst_list_size);
+
+	run_riscv_cpu(cpu);
 
 	assert(cpu->registers[r_t0] == 0x123);
 	assert(cpu->registers[r_t1] == 0x369);
@@ -356,9 +390,11 @@ void test_slti(riscv_cpu* cpu)
 		inst_slti(r_t1, r_t0, 291)     // 0x123
 	};
 
-	uint32_t inst_list_size = sizeof(inst_list) / sizeof(inst_list[0]);
+	uint32_t inst_list_size = array_size(inst_list);
 
-	load_and_run(cpu, inst_list, inst_list_size);
+	load_from_instructions(cpu, inst_list, inst_list_size);
+
+	run_riscv_cpu(cpu);
 
 	assert(cpu->registers[r_t0] == 0xffffff81);
 	assert(cpu->registers[r_t1] == 0x1);
@@ -372,9 +408,11 @@ void test_sltiu(riscv_cpu* cpu)
 		inst_sltiu(r_t1, r_t0, 3456),  // 0xd80
 	};
 
-	uint32_t inst_list_size = sizeof(inst_list) / sizeof(inst_list[0]);
+	uint32_t inst_list_size = array_size(inst_list);
 
-	load_and_run(cpu, inst_list, inst_list_size);
+	load_from_instructions(cpu, inst_list, inst_list_size);
+
+	run_riscv_cpu(cpu);
 
 	assert(cpu->registers[r_t0] == 0xfffff998);
 	assert(cpu->registers[r_t1] == 0x1);
@@ -388,9 +426,11 @@ void test_xori(riscv_cpu* cpu)
 		inst_xori(r_t1, r_t0, 582),   // 0x246
 	};
 
-	uint32_t inst_list_size = sizeof(inst_list) / sizeof(inst_list[0]);
+	uint32_t inst_list_size = array_size(inst_list);
 
-	load_and_run(cpu, inst_list, inst_list_size);
+	load_from_instructions(cpu, inst_list, inst_list_size);
+
+	run_riscv_cpu(cpu);
 
 	assert(cpu->registers[r_t0] == 0x123);
 	assert(cpu->registers[r_t1] == 0x365);
@@ -404,9 +444,11 @@ void test_ori(riscv_cpu* cpu)
 		inst_ori(r_t1, r_t0, 582),    // 0x246
 	};
 
-	uint32_t inst_list_size = sizeof(inst_list) / sizeof(inst_list[0]);
+	uint32_t inst_list_size = array_size(inst_list);
 
-	load_and_run(cpu, inst_list, inst_list_size);
+	load_from_instructions(cpu, inst_list, inst_list_size);
+
+	run_riscv_cpu(cpu);
 
 	assert(cpu->registers[r_t0] == 0x123);
 	assert(cpu->registers[r_t1] == 0x367);
@@ -420,9 +462,11 @@ void test_andi(riscv_cpu* cpu)
 		inst_andi(r_t1, r_t0, 582),   // 0x246
 	};
 
-	uint32_t inst_list_size = sizeof(inst_list) / sizeof(inst_list[0]);
+	uint32_t inst_list_size = array_size(inst_list);
 
-	load_and_run(cpu, inst_list, inst_list_size);
+	load_from_instructions(cpu, inst_list, inst_list_size);
+
+	run_riscv_cpu(cpu);
 
 	assert(cpu->registers[r_t0] == 0x123);
 	assert(cpu->registers[r_t1] == 0x002);
@@ -436,9 +480,11 @@ void test_slli(riscv_cpu* cpu)
 		inst_slli(r_t1, r_t0, 16)     // 0x2460000
 	};
 
-	uint32_t inst_list_size = sizeof(inst_list) / sizeof(inst_list[0]);
+	uint32_t inst_list_size = array_size(inst_list);
 
-	load_and_run(cpu, inst_list, inst_list_size);
+	load_from_instructions(cpu, inst_list, inst_list_size);
+
+	run_riscv_cpu(cpu);
 
 	assert(cpu->registers[r_t0] == 0x246);
 	assert(cpu->registers[r_t1] == 0x2460000);
@@ -452,9 +498,11 @@ void test_srli(riscv_cpu* cpu)
 		inst_srli(r_t1, r_t0, 16)  // 0x246
 	};
 
-	uint32_t inst_list_size = sizeof(inst_list) / sizeof(inst_list[0]);
+	uint32_t inst_list_size = array_size(inst_list);
 
-	load_and_run(cpu, inst_list, inst_list_size);
+	load_from_instructions(cpu, inst_list, inst_list_size);
+
+	run_riscv_cpu(cpu);
 
 	assert(cpu->registers[r_t0] == 0x2460000);
 	assert(cpu->registers[r_t1] == 0x246);
@@ -470,9 +518,11 @@ void test_srai(riscv_cpu* cpu)
 		inst_srai(r_t1, r_t0, 16)       // 0xffff8000
 	};
 
-	uint32_t inst_list_size = sizeof(inst_list) / sizeof(inst_list[0]);
+	uint32_t inst_list_size = array_size(inst_list);
 
-	load_and_run(cpu, inst_list, inst_list_size);
+	load_from_instructions(cpu, inst_list, inst_list_size);
+
+	run_riscv_cpu(cpu);
 
 	assert(cpu->registers[r_t0] == 0x80000001);
 	assert(cpu->registers[r_t1] == 0xffff8000);
@@ -491,9 +541,11 @@ void test_add(riscv_cpu* cpu)
 		inst_add(r_t2, r_t0, r_t1)    // 0x369
 	};
 
-	uint32_t inst_list_size = sizeof(inst_list) / sizeof(inst_list[0]);
+	uint32_t inst_list_size = array_size(inst_list);
 
-	load_and_run(cpu, inst_list, inst_list_size);
+	load_from_instructions(cpu, inst_list, inst_list_size);
+
+	run_riscv_cpu(cpu);
 
 	assert(cpu->registers[r_t0] == 0x123);
 	assert(cpu->registers[r_t1] == 0x246);
@@ -509,9 +561,11 @@ void test_sub(riscv_cpu* cpu)
 		inst_sub(r_t2, r_t0, r_t1)    // 0x123
 	};
 
-	uint32_t inst_list_size = sizeof(inst_list) / sizeof(inst_list[0]);
+	uint32_t inst_list_size = array_size(inst_list);
 
-	load_and_run(cpu, inst_list, inst_list_size);
+	load_from_instructions(cpu, inst_list, inst_list_size);
+
+	run_riscv_cpu(cpu);
 
 	assert(cpu->registers[r_t0] == 0x246);
 	assert(cpu->registers[r_t1] == 0x123);
@@ -527,9 +581,11 @@ void test_sll(riscv_cpu* cpu)
 		inst_sll(r_t2, r_t0, r_t1)    // 0x2460000
 	};
 
-	uint32_t inst_list_size = sizeof(inst_list) / sizeof(inst_list[0]);
+	uint32_t inst_list_size = array_size(inst_list);
 
-	load_and_run(cpu, inst_list, inst_list_size);
+	load_from_instructions(cpu, inst_list, inst_list_size);
+
+	run_riscv_cpu(cpu);
 
 	assert(cpu->registers[r_t0] == 0x246);
 	assert(cpu->registers[r_t1] == 0x010);
@@ -545,9 +601,11 @@ void test_slt(riscv_cpu* cpu)
 		inst_slt(r_t2, r_t0, r_t1)    
 	};
 
-	uint32_t inst_list_size = sizeof(inst_list) / sizeof(inst_list[0]);
+	uint32_t inst_list_size = array_size(inst_list);
 
-	load_and_run(cpu, inst_list, inst_list_size);
+	load_from_instructions(cpu, inst_list, inst_list_size);
+
+	run_riscv_cpu(cpu);
 
 	assert(cpu->registers[r_t0] == 0xffffff81);
 	assert(cpu->registers[r_t1] == 0x123);
@@ -563,9 +621,11 @@ void test_sltu(riscv_cpu* cpu)
 		inst_sltu(r_t2, r_t0, r_t1)
 	};
 
-	uint32_t inst_list_size = sizeof(inst_list) / sizeof(inst_list[0]);
+	uint32_t inst_list_size = array_size(inst_list);
 
-	load_and_run(cpu, inst_list, inst_list_size);
+	load_from_instructions(cpu, inst_list, inst_list_size);
+
+	run_riscv_cpu(cpu);
 
 	assert(cpu->registers[r_t0] == 0xfffff998);
 	assert(cpu->registers[r_t1] == 0xfffffd80);
@@ -581,9 +641,11 @@ void test_xor(riscv_cpu* cpu)
 		inst_xor(r_t2, r_t0, r_t1)    // 0x365
 	};
 
-	uint32_t inst_list_size = sizeof(inst_list) / sizeof(inst_list[0]);
+	uint32_t inst_list_size = array_size(inst_list);
 
-	load_and_run(cpu, inst_list, inst_list_size);
+	load_from_instructions(cpu, inst_list, inst_list_size);
+
+	run_riscv_cpu(cpu);
 
 	assert(cpu->registers[r_t0] == 0x123);
 	assert(cpu->registers[r_t1] == 0x246);
@@ -599,9 +661,11 @@ void test_srl(riscv_cpu* cpu)
 		inst_srl(r_t2, r_t0, r_t1)   // 0x246
 	};
 
-	uint32_t inst_list_size = sizeof(inst_list) / sizeof(inst_list[0]);
+	uint32_t inst_list_size = array_size(inst_list);
 
-	load_and_run(cpu, inst_list, inst_list_size);
+	load_from_instructions(cpu, inst_list, inst_list_size);
+
+	run_riscv_cpu(cpu);
 
 	assert(cpu->registers[r_t0] == 0x2460000);
 	assert(cpu->registers[r_t1] == 0x010);
@@ -619,9 +683,11 @@ void test_sra(riscv_cpu* cpu)
 		inst_sra(r_t2, r_t0, r_t1)      // 0xffff8000
 	};
 
-	uint32_t inst_list_size = sizeof(inst_list) / sizeof(inst_list[0]);
+	uint32_t inst_list_size = array_size(inst_list);
 
-	load_and_run(cpu, inst_list, inst_list_size);
+	load_from_instructions(cpu, inst_list, inst_list_size);
+
+	run_riscv_cpu(cpu);
 
 	assert(cpu->registers[r_t0] == 0x80000001);
 	assert(cpu->registers[r_t1] == 0x010);
@@ -637,9 +703,11 @@ void test_or(riscv_cpu* cpu)
 		inst_or(r_t2, r_t0, r_t1)     // 0x367
 	};
 
-	uint32_t inst_list_size = sizeof(inst_list) / sizeof(inst_list[0]);
+	uint32_t inst_list_size = array_size(inst_list);
 
-	load_and_run(cpu, inst_list, inst_list_size);
+	load_from_instructions(cpu, inst_list, inst_list_size);
+
+	run_riscv_cpu(cpu);
 
 	assert(cpu->registers[r_t0] == 0x123);
 	assert(cpu->registers[r_t1] == 0x246);
@@ -655,9 +723,11 @@ void test_and(riscv_cpu* cpu)
 		inst_and(r_t2, r_t0, r_t1)    // 0x002
 	};
 
-	uint32_t inst_list_size = sizeof(inst_list) / sizeof(inst_list[0]);
+	uint32_t inst_list_size = array_size(inst_list);
 
-	load_and_run(cpu, inst_list, inst_list_size);
+	load_from_instructions(cpu, inst_list, inst_list_size);
+
+	run_riscv_cpu(cpu);
 
 	assert(cpu->registers[r_t0] == 0x123);
 	assert(cpu->registers[r_t1] == 0x246);

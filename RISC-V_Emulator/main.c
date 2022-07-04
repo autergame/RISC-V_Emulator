@@ -10,75 +10,94 @@
 
 int main(const int argc, const char* argv[])
 {
-	const char insts[] =
-		"###"
-		"\n\n\n"
-		"#test1\n"
-		"\n#test2"
-		"#test3\n"
-		"test1, test2 test3,\n"
+	if (argc < 3 || argc > 4)
+	{
+		printf("Usage: compile source destination \n");
+		printf("Usage: run source \n");
+		return -1;
+	}
 
-		"jal zero, main\n"
-		"abs:\n"
-		"	bge a2, zero, 12\n"
-		"	sub a0, zero, a2\n"
-		"	jalr zero, ra, 0\n"
-		"	addi a0, a2, 0\n"
-		"	jalr zero, ra, 0\n"
-		"main:\n"
-		"ebreak\n"
-		"	addi sp, sp, -0x10\n"
-		"	sw sp, ra, 0xc\n"
-		"	sw sp, a0, 8\n"
-		"	sw sp, a2, 4\n"
-		"	sw sp, fp, 0\n"
-		"	addi fp, sp, 16\n"
-		"ebreak\n"
-		"		addi a2, zero, -5\n"
-		"			jal ra, abs\n"
-		"		addi a0, a0, 5\n"
-		"ebreak\n"
-		"	lw ra, sp, 12\n"
-		"	lw a0, sp, 8\n"
-		"	lw a2, sp, 4\n"
-		"	lw fp, sp, 0\n"
-		"	addi sp, sp, 16\n"
-		"ebreak\n"
-		"	addi sp, sp, -16\n"
-		"	sw sp, ra, 12\n"
-		"	sw sp, a0, 8\n"
-		"	sw sp, a2, 4\n"
-		"	sw sp, fp, 0\n"
-		"	addi fp, sp, 16\n"
-		"ebreak\n"
-		"		addi a2, zero, 5\n"
-		"			jal ra, abs\n"
-		"		addi a0, a0, -5\n"
-		"ebreak\n"
-		"	lw ra, sp, 12\n"
-		"	lw a0, sp, 8\n"
-		"	lw a2, sp, 4\n"
-		"	lw fp, sp, 0\n"
-		"	addi sp, sp, 16\n"
-		"ebreak";
+	if (strcmp(argv[1], "compile") == 0)
+	{
+		const char* file_open_path = argv[2];
+		const char* file_save_path = argv[3];
 
-	int inst_size = array_size(insts);
+		FILE* file_open_pointer;
+		errno_t file_open_error = fopen_s(&file_open_pointer, file_open_path, "rb");
+		if (file_open_error)
+		{
+			char error_msg[255] = { "\0" };
+			strerror_s(error_msg, 255, file_open_error);
+			printf("ERROR: Cannot read file %s %s\n", file_open_path, error_msg);
+			return -1;
+		}
 
-	uint32_t compiled_insts_size = 0;
-	uint32_t* compiled_insts = assemble(insts, inst_size, &compiled_insts_size);
+		fseek(file_open_pointer, 0, SEEK_END);
+		size_t file_open_size = (size_t)ftell(file_open_pointer);
+		fseek(file_open_pointer, 0, SEEK_SET);
 
-	riscv_cpu cpu = create_riscv_cpu();
+		char* file_open_string = (char*)calloc(file_open_size + 1, sizeof(char));
+		myassert(fread(file_open_string, 1, file_open_size, file_open_pointer) != file_open_size)
 
-	reset_riscv_cpu(&cpu);
+		uint32_t compiled_insts_count = 0;
+		uint32_t* compiled_insts = assemble(file_open_string, file_open_size, &compiled_insts_count);
 
-	memcpy(cpu.memory, compiled_insts, compiled_insts_size * sizeof(uint32_t));
-	(*memory_uint32(&cpu, compiled_insts_size * 4)) = 0xDEADC0DE;
+		free(file_open_string);
+		fclose(file_open_pointer);
 
-	run_riscv_cpu(&cpu);
+		FILE* file_save_pointer;
+		errno_t file_save_error = fopen_s(&file_save_pointer, file_save_path, "wb");
+		if (file_save_error)
+		{
+			char error_msg[255] = { '\0' };
+			strerror_s(error_msg, 255, file_save_error);
+			printf("ERROR: Cannot write file %s %s\n", file_save_path, error_msg);
+			return -1;
+		}
 
-	destroy_riscv_cpu(&cpu);
+		myassert(fwrite(compiled_insts, 4, compiled_insts_count, file_save_pointer) != compiled_insts_count)
 
-	free(compiled_insts);
+		free(compiled_insts);
+		fclose(file_save_pointer);
+	}
+	else if (strcmp(argv[1], "run") == 0)
+	{
+		const char* file_open_path = argv[2];
+
+		FILE* file_open_pointer;
+		errno_t file_open_error = fopen_s(&file_open_pointer, file_open_path, "rb");
+		if (file_open_error)
+		{
+			char error_msg[255] = { "\0" };
+			strerror_s(error_msg, 255, file_open_error);
+			printf("ERROR: Cannot read file %s %s\n", file_open_path, error_msg);
+			return -1;
+		}
+
+		fseek(file_open_pointer, 0, SEEK_END);
+		size_t file_open_size = (size_t)ftell(file_open_pointer);
+		fseek(file_open_pointer, 0, SEEK_SET);
+
+		char* file_open_compiled = (char*)calloc(file_open_size, sizeof(char));
+		myassert(fread(file_open_compiled, 1, file_open_size, file_open_pointer) != file_open_size);
+
+		riscv_cpu cpu = create_riscv_cpu();
+
+		load_from_uint8(&cpu, file_open_compiled, file_open_size);
+
+		run_riscv_cpu(&cpu);
+
+		destroy_riscv_cpu(&cpu);
+
+		free(file_open_compiled);
+		fclose(file_open_pointer);
+	}
+	else
+	{
+		printf("Usage: compile source destination \n");
+		printf("Usage: run source \n");
+		return -1;
+	}
 
 	return 0;
 }

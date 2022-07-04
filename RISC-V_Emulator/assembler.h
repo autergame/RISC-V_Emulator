@@ -3,8 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 
+#include "myassert.h"
 #include "inst_defs.h"
 
 #define array_size(v_array) (sizeof(v_array) / sizeof(v_array[0]))
@@ -163,12 +163,12 @@ int check_valid_hex_or_decimal(const char* string)
 char* string_copy_limited(const char* source, const int string_len)
 {
 	char* destination = (char*)calloc(string_len + 1, sizeof(char));
-	assert(memcpy(destination, source, string_len) == destination);
+	myassert(memcpy(destination, source, string_len) != destination);
 	destination[string_len] = '\0';
 	return destination;
 }
 
-uint32_t* assemble(const char* insts, const int inst_size, int* compiled_insts_size)
+uint32_t* assemble(const char* insts, const int inst_size, int* compiled_insts_count)
 {
 	int newline_count = 1;
 	for (int i = 0; i < inst_size - 1; i++)
@@ -262,7 +262,7 @@ uint32_t* assemble(const char* insts, const int inst_size, int* compiled_insts_s
 
 	for (int i = 0; i < tokens_count; i++)
 	{
-		char* token = tokens[i];
+		const char* token = tokens[i];
 
 		size_t string_len = strlen(token);
 		if (token[string_len - 1] == ':')
@@ -283,346 +283,425 @@ uint32_t* assemble(const char* insts, const int inst_size, int* compiled_insts_s
 
 	for (int i = 0; i < tokens_count; i++)
 	{
-		char* token_1 = tokens[i];
+		const char* token_1 = tokens[i];
+
+		if (token_1[strlen(token_1) - 1] == ':')
+		{
+			continue;
+		}
+
 		int opcode = string_is_in_list(keywords, keywords_size, token_1);
 
-		if (opcode != -1)
+		if (opcode == -1)
 		{
-			switch (opcode)
+			printf("Skipping unknown opcode: %s\n", token_1);
+			continue;
+		}
+
+		switch (opcode)
+		{
+			// U
+			case 0: // lui
+			case 1: // auipc
 			{
-				// U
-				case 0: // lui
-				case 1: // auipc
+				if (i + 2 > tokens_count)
 				{
-					if (i + 2 > tokens_count)
+					printf("Opcode: %s need more 2 tokens: rd imm\n", keywords[opcode]);
+					break;
+				}
+
+				const char* token_2 = tokens[++i];
+				int rd = string_is_in_list(registers, registers_size, token_2);
+
+				if (rd == -1)
+				{
+					printf("Unknown register rd: %s\n", token_2);
+					break;
+				}
+				if (i + 1 > tokens_count)
+				{
+					printf("Opcode: %s need more 1 token: imm\n", keywords[opcode]);
+					break;
+				}
+
+				const char* token_3 = tokens[++i];
+
+				if (check_valid_hex_or_decimal(token_3) == 0)
+				{
+					printf("Invalid number / hex: %s\n", token_3);
+					break;
+				}
+
+				uint32_t imm = hex_or_decimal_from_string(token_3);
+
+				inst_funct_2_args inst_func = (inst_funct_2_args)opcode_functs[opcode];
+
+				instruction inst = inst_func(registers_index[rd], imm);
+				compiled_insts[compiled_insts_pointer] = inst.bits;
+
+				compiled_insts_pointer += 1;
+
+				break;
+			}
+
+			// J
+			case 2: // jal
+			{
+				if (i + 2 > tokens_count)
+				{
+					printf("Opcode: %s need more 2 tokens: rd imm\n", keywords[opcode]);
+					break;
+				}
+
+				const char* token_2 = tokens[++i];
+				int rd = string_is_in_list(registers, registers_size, token_2);
+
+				if (rd == -1)
+				{
+					printf("Unknown register rd: %s\n", token_2);
+					break;
+				}
+				if (i + 1 > tokens_count)
+				{
+					printf("Opcode: %s need more 1 token: imm\n", keywords[opcode]);
+					break;
+				}
+
+				const char* token_3 = tokens[++i];
+
+				uint32_t imm = 0;
+
+				label_node* current = linked_main;
+				while (current != NULL)
+				{
+					if (strcmp(current->key, token_3) == 0)
 					{
-						printf("Opcode: %s need more 2 tokens: rd imm\n", keywords[opcode]);
+						imm = current->value;
 						break;
 					}
+					current = current->node;
+				}
 
-					char* token_2 = tokens[++i];
-					int rd = string_is_in_list(registers, registers_size, token_2);
-
-					if (rd == -1)
-					{
-						printf("Unknown register rd: %s\n", token_2);
-						break;
-					}
-					if (i + 1 > tokens_count)
-					{
-						printf("Opcode: %s need more 1 token: imm\n", keywords[opcode]);
-						break;
-					}
-
-					char* token_3 = tokens[++i];
-
+				if (current == NULL)
+				{
 					if (check_valid_hex_or_decimal(token_3) == 0)
 					{
-						printf("Invalid number / hex: %s\n", token_3);
+						printf("Unknown label or invalid number / hex: %s\n", token_3);
 						break;
 					}
 
-					uint32_t imm = hex_or_decimal_from_string(token_3);
-
-					inst_funct_2_args inst_func = (inst_funct_2_args)opcode_functs[opcode];
-
-					instruction inst = inst_func(registers_index[rd], imm);
-					compiled_insts[compiled_insts_pointer] = inst.bits;
-
-					compiled_insts_pointer += 1;
-
-					break;
+					imm = hex_or_decimal_from_string(token_3);
 				}
-
-				// J
-				case 2: // jal
+				else
 				{
-					if (i + 2 > tokens_count)
-					{
-						printf("Opcode: %s need more 2 tokens: rd imm\n", keywords[opcode]);
-						break;
-					}
-
-					char* token_2 = tokens[++i];
-					int rd = string_is_in_list(registers, registers_size, token_2);
-
-					if (rd == -1)
-					{
-						printf("Unknown register rd: %s\n", token_2);
-						break;
-					}
-					if (i + 1 > tokens_count)
-					{
-						printf("Opcode: %s need more 1 token: imm\n", keywords[opcode]);
-						break;
-					}
-
-					char* token_3 = tokens[++i];
-
-					uint32_t imm = 0;
-
-					label_node* current = linked_main;
-					while (current != NULL)
-					{
-						if (strcmp(current->key, token_3) == 0)
-						{
-							imm = current->value;
-							break;
-						}
-						current = current->node;
-					}
-
-					if (current == NULL)
-					{
-						if (check_valid_hex_or_decimal(token_3) == 0)
-						{
-							printf("Unknown label or invalid number / hex: %s\n", token_3);
-							break;
-						}
-
-						imm = hex_or_decimal_from_string(token_3);
-					}
+					uint32_t insts_pointer = compiled_insts_pointer * 4;
+					if (imm < insts_pointer)
+						imm = -((int32_t)(insts_pointer - imm));
 					else
-					{
-						uint32_t insts_pointer = compiled_insts_pointer * 4;
-						if (imm < insts_pointer)
-							imm = -((int32_t)(insts_pointer - imm));
-					}
-
-					inst_funct_2_args inst_func = (inst_funct_2_args)opcode_functs[opcode];
-
-					instruction inst = inst_func(registers_index[rd], imm);
-					compiled_insts[compiled_insts_pointer] = inst.bits;
-
-					compiled_insts_pointer += 1;
-
-					break;
-				}
-				
-				// R
-				case 27: // add
-				case 28: // sub
-				case 29: // sll
-				case 30: // slt
-				case 31: // sltu
-				case 32: // xor
-				case 33: // srl
-				case 34: // sra
-				case 35: // or
-				case 36: // and
-				{
-					if (i + 3 > tokens_count)
-					{
-						printf("Opcode: %s need more 3 tokens: rd rs1 rs2\n", keywords[opcode]);
-						break;
-					}
-
-					char* token_2 = tokens[++i];
-					int rd = string_is_in_list(registers, registers_size, token_2);
-
-					if (rd == -1)
-					{
-						printf("Unknown register rd: %s\n", token_2);
-						break;
-					}
-					if (i + 2 > tokens_count)
-					{
-						printf("Opcode: %s need more 2 tokens: rs1 rs2\n", keywords[opcode]);
-						break;
-					}
-
-					char* token_3 = tokens[++i];
-					int rs1 = string_is_in_list(registers, registers_size, token_3);
-
-					if (rs1 == -1)
-					{
-						printf("Unknown register rs1: %s\n", token_3);
-						break;
-					}
-					if (i + 1 > tokens_count)
-					{
-						printf("Opcode: %s need more 1 token: rs2\n", keywords[opcode]);
-						break;
-					}
-
-					char* token_4 = tokens[++i];
-					int rs2 = string_is_in_list(registers, registers_size, token_4);
-
-					if (rs2 == -1)
-					{
-						printf("Unknown register rs2: %s\n", token_4);
-						break;
-					}
-
-					inst_funct_3_args inst_func = (inst_funct_3_args)opcode_functs[opcode];
-
-					instruction inst = inst_func(registers_index[rd],
-						registers_index[rs1], registers_index[rs2]);
-					compiled_insts[compiled_insts_pointer] = inst.bits;
-
-					compiled_insts_pointer += 1;
-
-					break;
+						imm -= insts_pointer;
 				}
 
-				// I
-				case 3: // jalr
-				case 10: // lb
-				case 11: // lh
-				case 12: // lw
-				case 13: // lbu
-				case 14: // lhu
-				case 18: // addi
-				case 19: // slti
-				case 20: // sltiu
-				case 21: // xori
-				case 22: // ori
-				case 23: // andi
-				// Shift
-				case 24: // slli
-				case 25: // srli
-				case 26: // srai
-				{
-					if (i + 3 > tokens_count)
-					{
-						printf("Opcode: %s need more 3 tokens: rd rs1 imm\n", keywords[opcode]);
-						break;
-					}
+				inst_funct_2_args inst_func = (inst_funct_2_args)opcode_functs[opcode];
 
-					char* token_2 = tokens[++i];
-					int rd = string_is_in_list(registers, registers_size, token_2);
+				instruction inst = inst_func(registers_index[rd], imm);
+				compiled_insts[compiled_insts_pointer] = inst.bits;
 
-					if (rd == -1)
-					{
-						printf("Unknown register rd: %s\n", token_2);
-						break;
-					}
-					if (i + 2 > tokens_count)
-					{
-						printf("Opcode: %s need more 2 tokens: rs1 imm\n", keywords[opcode]);
-						break;
-					}
+				compiled_insts_pointer += 1;
 
-					char* token_3 = tokens[++i];
-					int rs1 = string_is_in_list(registers, registers_size, token_3);
-
-					if (rs1 == -1)
-					{
-						printf("Unknown register rs1: %s\n", token_3);
-						break;
-					}
-					if (i + 1 > tokens_count)
-					{
-						printf("Opcode: %s need more 1 token: imm\n", keywords[opcode]);
-						break;
-					}
-
-					char* token_4 = tokens[++i];
-
-					if (check_valid_hex_or_decimal(token_4) == 0)
-					{
-						printf("Invalid number / hex: %s\n", token_4);
-						break;
-					}
-
-					uint32_t imm = hex_or_decimal_from_string(token_4);
-
-					inst_funct_3_args inst_func = (inst_funct_3_args)opcode_functs[opcode];
-
-					instruction inst = inst_func(registers_index[rd], registers_index[rs1], imm);
-					compiled_insts[compiled_insts_pointer] = inst.bits;
-
-					compiled_insts_pointer += 1;
-
-					break;
-				}
-
-				// B
-				case 4: // beq
-				case 5: // bne
-				case 6: // blt
-				case 7: // bge
-				case 8: // bltu
-				case 9: // bgeu
-				// S
-				case 15: // sb
-				case 16: // sh
-				case 17: // sw
-				{
-					if (i + 3 > tokens_count)
-					{
-						printf("Opcode: %s need more 3 tokens: rs1 rs2 imm\n", keywords[opcode]);
-						break;
-					}
-
-					char* token_2 = tokens[++i];
-					int rs1 = string_is_in_list(registers, registers_size, token_2);
-
-					if (rs1 == -1)
-					{
-						printf("Unknown register rs1: %s\n", token_2);
-					}
-					if (i + 2 > tokens_count)
-					{
-						printf("Opcode: %s need more 2 tokens: rs2 imm\n", keywords[opcode]);
-					}
-
-					char* token_3 = tokens[++i];
-					int rs2 = string_is_in_list(registers, registers_size, token_3);
-
-					if (rs2 == -1)
-					{
-						printf("Unknown register rs2: %s\n", token_3);
-					}
-					if (i + 1 > tokens_count)
-					{
-						printf("Opcode: %s need more 1 token: imm\n", keywords[opcode]);
-					}
-
-					char* token_4 = tokens[++i];
-
-					if (check_valid_hex_or_decimal(token_4) == 0)
-					{
-						printf("Invalid number / hex: %s\n", token_4);
-						break;
-					}
-
-					uint32_t imm = hex_or_decimal_from_string(token_4);
-
-					inst_funct_3_args inst_func = (inst_funct_3_args)opcode_functs[opcode];
-
-					instruction inst = inst_func(registers_index[rs1], registers_index[rs2], imm);
-					compiled_insts[compiled_insts_pointer] = inst.bits;
-
-					compiled_insts_pointer += 1;
-
-					break;
-				}
-				
-				// E
-				case 37: // ecall
-				case 38: // ebreak
-				{
-					inst_funct_0_args inst_func = (inst_funct_0_args)opcode_functs[opcode];
-
-					instruction inst = inst_func();
-					compiled_insts[compiled_insts_pointer] = inst.bits;
-
-					compiled_insts_pointer += 1;
-
-					break;
-				}
-
-				default:
-					break;
+				break;
 			}
-		}
-		else
-		{
-			if (token_1[strlen(token_1) - 1] != ':')
+				
+			// R
+			case 27: // add
+			case 28: // sub
+			case 29: // sll
+			case 30: // slt
+			case 31: // sltu
+			case 32: // xor
+			case 33: // srl
+			case 34: // sra
+			case 35: // or
+			case 36: // and
 			{
-				printf("Skipping unknown opcode: %s\n", token_1);
+				if (i + 3 > tokens_count)
+				{
+					printf("Opcode: %s need more 3 tokens: rd rs1 rs2\n", keywords[opcode]);
+					break;
+				}
+
+				const char* token_2 = tokens[++i];
+				int rd = string_is_in_list(registers, registers_size, token_2);
+
+				if (rd == -1)
+				{
+					printf("Unknown register rd: %s\n", token_2);
+					break;
+				}
+				if (i + 2 > tokens_count)
+				{
+					printf("Opcode: %s need more 2 tokens: rs1 rs2\n", keywords[opcode]);
+					break;
+				}
+
+				const char* token_3 = tokens[++i];
+				int rs1 = string_is_in_list(registers, registers_size, token_3);
+
+				if (rs1 == -1)
+				{
+					printf("Unknown register rs1: %s\n", token_3);
+					break;
+				}
+				if (i + 1 > tokens_count)
+				{
+					printf("Opcode: %s need more 1 token: rs2\n", keywords[opcode]);
+					break;
+				}
+
+				const char* token_4 = tokens[++i];
+				int rs2 = string_is_in_list(registers, registers_size, token_4);
+
+				if (rs2 == -1)
+				{
+					printf("Unknown register rs2: %s\n", token_4);
+					break;
+				}
+
+				inst_funct_3_args inst_func = (inst_funct_3_args)opcode_functs[opcode];
+
+				instruction inst = inst_func(registers_index[rd],
+					registers_index[rs1], registers_index[rs2]);
+				compiled_insts[compiled_insts_pointer] = inst.bits;
+
+				compiled_insts_pointer += 1;
+
+				break;
 			}
+
+			// I
+			case 3: // jalr
+			case 10: // lb
+			case 11: // lh
+			case 12: // lw
+			case 13: // lbu
+			case 14: // lhu
+			case 18: // addi
+			case 19: // slti
+			case 20: // sltiu
+			case 21: // xori
+			case 22: // ori
+			case 23: // andi
+			// Shift
+			case 24: // slli
+			case 25: // srli
+			case 26: // srai
+			{
+				if (i + 3 > tokens_count)
+				{
+					printf("Opcode: %s need more 3 tokens: rd rs1 imm\n", keywords[opcode]);
+					break;
+				}
+
+				const char* token_2 = tokens[++i];
+				int rd = string_is_in_list(registers, registers_size, token_2);
+
+				if (rd == -1)
+				{
+					printf("Unknown register rd: %s\n", token_2);
+					break;
+				}
+				if (i + 2 > tokens_count)
+				{
+					printf("Opcode: %s need more 2 tokens: rs1 imm\n", keywords[opcode]);
+					break;
+				}
+
+				const char* token_3 = tokens[++i];
+				int rs1 = string_is_in_list(registers, registers_size, token_3);
+
+				if (rs1 == -1)
+				{
+					printf("Unknown register rs1: %s\n", token_3);
+					break;
+				}
+				if (i + 1 > tokens_count)
+				{
+					printf("Opcode: %s need more 1 token: imm\n", keywords[opcode]);
+					break;
+				}
+
+				const char* token_4 = tokens[++i];
+
+				if (check_valid_hex_or_decimal(token_4) == 0)
+				{
+					printf("Invalid number / hex: %s\n", token_4);
+					break;
+				}
+
+				uint32_t imm = hex_or_decimal_from_string(token_4);
+
+				inst_funct_3_args inst_func = (inst_funct_3_args)opcode_functs[opcode];
+
+				instruction inst = inst_func(registers_index[rd], registers_index[rs1], imm);
+				compiled_insts[compiled_insts_pointer] = inst.bits;
+
+				compiled_insts_pointer += 1;
+
+				break;
+			}
+
+			// B
+			case 4: // beq
+			case 5: // bne
+			case 6: // blt
+			case 7: // bge
+			case 8: // bltu
+			case 9: // bgeu
+			{
+				if (i + 3 > tokens_count)
+				{
+					printf("Opcode: %s need more 3 tokens: rs1 rs2 imm\n", keywords[opcode]);
+					break;
+				}
+
+				const char* token_2 = tokens[++i];
+				int rs1 = string_is_in_list(registers, registers_size, token_2);
+
+				if (rs1 == -1)
+				{
+					printf("Unknown register rs1: %s\n", token_2);
+				}
+				if (i + 2 > tokens_count)
+				{
+					printf("Opcode: %s need more 2 tokens: rs2 imm\n", keywords[opcode]);
+				}
+
+				const char* token_3 = tokens[++i];
+				int rs2 = string_is_in_list(registers, registers_size, token_3);
+
+				if (rs2 == -1)
+				{
+					printf("Unknown register rs2: %s\n", token_3);
+				}
+				if (i + 1 > tokens_count)
+				{
+					printf("Opcode: %s need more 1 token: imm\n", keywords[opcode]);
+				}
+
+				const char* token_4 = tokens[++i];
+
+				uint32_t imm = 0;
+
+				label_node* current = linked_main;
+				while (current != NULL)
+				{
+					if (strcmp(current->key, token_4) == 0)
+					{
+						imm = current->value;
+						break;
+					}
+					current = current->node;
+				}
+
+				if (current == NULL)
+				{
+					if (check_valid_hex_or_decimal(token_4) == 0)
+					{
+						printf("Unknown label or invalid number / hex: %s\n", token_4);
+						break;
+					}
+
+					imm = hex_or_decimal_from_string(token_4);
+				}
+				else
+				{
+					uint32_t insts_pointer = compiled_insts_pointer * 4;
+					if (imm < insts_pointer)
+						imm = -((int32_t)(insts_pointer - imm));
+					else
+						imm -= insts_pointer;
+				}
+
+				inst_funct_3_args inst_func = (inst_funct_3_args)opcode_functs[opcode];
+
+				instruction inst = inst_func(registers_index[rs1], registers_index[rs2], imm);
+				compiled_insts[compiled_insts_pointer] = inst.bits;
+
+				compiled_insts_pointer += 1;
+
+				break;
+			}
+
+			// S
+			case 15: // sb
+			case 16: // sh
+			case 17: // sw
+			{
+				if (i + 3 > tokens_count)
+				{
+					printf("Opcode: %s need more 3 tokens: rs1 rs2 imm\n", keywords[opcode]);
+					break;
+				}
+
+				const char* token_2 = tokens[++i];
+				int rs1 = string_is_in_list(registers, registers_size, token_2);
+
+				if (rs1 == -1)
+				{
+					printf("Unknown register rs1: %s\n", token_2);
+				}
+				if (i + 2 > tokens_count)
+				{
+					printf("Opcode: %s need more 2 tokens: rs2 imm\n", keywords[opcode]);
+				}
+
+				const char* token_3 = tokens[++i];
+				int rs2 = string_is_in_list(registers, registers_size, token_3);
+
+				if (rs2 == -1)
+				{
+					printf("Unknown register rs2: %s\n", token_3);
+				}
+				if (i + 1 > tokens_count)
+				{
+					printf("Opcode: %s need more 1 token: imm\n", keywords[opcode]);
+				}
+
+				const char* token_4 = tokens[++i];
+
+				if (check_valid_hex_or_decimal(token_4) == 0)
+				{
+					printf("Invalid number / hex: %s\n", token_4);
+					break;
+				}
+
+				uint32_t imm = hex_or_decimal_from_string(token_4);
+
+				inst_funct_3_args inst_func = (inst_funct_3_args)opcode_functs[opcode];
+
+				instruction inst = inst_func(registers_index[rs1], registers_index[rs2], imm);
+				compiled_insts[compiled_insts_pointer] = inst.bits;
+
+				compiled_insts_pointer += 1;
+
+				break;
+			}
+				
+			// E
+			case 37: // ecall
+			case 38: // ebreak
+			{
+				inst_funct_0_args inst_func = (inst_funct_0_args)opcode_functs[opcode];
+
+				instruction inst = inst_func();
+				compiled_insts[compiled_insts_pointer] = inst.bits;
+
+				compiled_insts_pointer += 1;
+
+				break;
+			}
+
+			default:
+				break;
 		}
 	}
 
@@ -647,7 +726,7 @@ uint32_t* assemble(const char* insts, const int inst_size, int* compiled_insts_s
 	}
 	free(inst_splitted);
 
-	*compiled_insts_size = compiled_insts_pointer;
+	*compiled_insts_count = compiled_insts_pointer;
 
 	return compiled_insts;
 }

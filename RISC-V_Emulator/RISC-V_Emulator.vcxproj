@@ -150,6 +150,7 @@
     <ClInclude Include="imm_enc_dec.h" />
     <ClInclude Include="instructions.h" />
     <ClInclude Include="inst_defs.h" />
+    <ClInclude Include="myassert.h" />
     <ClInclude Include="tests_imm.h" />
     <ClInclude Include="tests_inst.h" />
     <ClInclude Include="types.h" />

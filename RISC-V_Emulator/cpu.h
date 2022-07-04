@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <inttypes.h>
 
+#include "myassert.h"
+
 #define memory_size 0xfffff
 #define stack_pointer 0xf8000
 
@@ -109,14 +111,14 @@ void load_from_instructions(riscv_cpu* cpu, const instruction inst_list[], const
 	reset_riscv_cpu(cpu);
 	for (uint32_t i = 0; i < inst_list_size; i++)
 	{
-		*memory_uint32(cpu, i * 4) = inst_list[i].bits;
+		(*memory_uint32(cpu, i * 4)) = inst_list[i].bits;
 	}
-	*memory_uint32(cpu, inst_list_size * 4) = 0xDEADC0DE;
+	(*memory_uint32(cpu, inst_list_size * 4)) = 0xDEADC0DE;
 }
 
-void load_and_run(riscv_cpu* cpu, const instruction inst_list[], const uint32_t inst_list_size)
+void load_from_uint8(riscv_cpu* cpu, const uint8_t* inst_compiled, const uint32_t inst_compiled_size)
 {
-	load_from_instructions(cpu, inst_list, inst_list_size);
-
-	run_riscv_cpu(cpu);
+	reset_riscv_cpu(cpu);
+	myassert(memcpy(cpu->memory, inst_compiled, inst_compiled_size) != cpu->memory);
+	(*memory_uint32(cpu, inst_compiled_size)) = 0xDEADC0DE;
 }
