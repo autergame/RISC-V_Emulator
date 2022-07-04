@@ -355,7 +355,9 @@ void execute_opcode_e_and_system(const instruction inst, riscv_cpu* cpu)
 
 				case imm11_0_000000000001: // ebreak
 				{
-					__debugbreak();
+					#ifdef DEBUG
+						__debugbreak();
+					#endif			
 					dump_registers(cpu);
 					cpu->program_counter = cpu->program_counter + 4;
 					break;
