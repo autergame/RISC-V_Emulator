@@ -45,9 +45,7 @@ void execute_opcode_branch(const instruction inst, riscv_cpu* cpu)
 
 		case funct3_110: // bltu
 		{
-			uint32_t rs1 = cpu->registers[inst.B.rs1] & 0b00000000000000000000111111111111;
-			uint32_t rs2 = cpu->registers[inst.B.rs2] & 0b00000000000000000000111111111111;
-			if (rs1 < rs2)
+			if (cpu->registers[inst.B.rs1] < cpu->registers[inst.B.rs2])
 				cpu->program_counter = (int32_t)cpu->program_counter + inst_b_imm(inst);
 			else
 				cpu->program_counter = cpu->program_counter + 4;
@@ -56,9 +54,7 @@ void execute_opcode_branch(const instruction inst, riscv_cpu* cpu)
 
 		case funct3_111: // bgeu
 		{
-			uint32_t rs1 = cpu->registers[inst.B.rs1] & 0b00000000000000000000111111111111;
-			uint32_t rs2 = cpu->registers[inst.B.rs2] & 0b00000000000000000000111111111111;
-			if (rs1 >= rs2)
+			if (cpu->registers[inst.B.rs1] >= cpu->registers[inst.B.rs2])
 				cpu->program_counter = (int32_t)cpu->program_counter + inst_b_imm(inst);
 			else
 				cpu->program_counter = cpu->program_counter + 4;
@@ -66,7 +62,10 @@ void execute_opcode_branch(const instruction inst, riscv_cpu* cpu)
 		}
 
 		default:
+		{
+			panic("Unimplemented B funct3 %d", inst.B.funct3);
 			break;
+		}
 	}
 }
 
@@ -117,7 +116,10 @@ void execute_opcode_load(const instruction inst, riscv_cpu* cpu)
 		}
 
 		default:
+		{
+			panic("Unimplemented I funct3 %d", inst.I.funct3);
 			break;
+		}
 	}
 }
 
@@ -150,7 +152,10 @@ void execute_opcode_store(const instruction inst, riscv_cpu* cpu)
 		}
 
 		default:
+		{
+			panic("Unimplemented S funct3 %d", inst.S.funct3);
 			break;
+		}
 	}
 }
 
@@ -181,8 +186,7 @@ void execute_opcode_alu_and_shift_imm(const instruction inst, riscv_cpu* cpu)
 
 		case funct3_011: // sltiu
 		{
-			uint32_t rs1 = cpu->registers[inst.I.rs1] & 0b00000000000000000000111111111111;
-			cpu->registers[inst.I.rd] = rs1 < inst.I.imm11_0;
+			cpu->registers[inst.I.rd] = cpu->registers[inst.I.rs1] < inst.I.imm11_0;
 			cpu->program_counter = cpu->program_counter + 4;
 			break;
 		}
@@ -213,7 +217,10 @@ void execute_opcode_alu_and_shift_imm(const instruction inst, riscv_cpu* cpu)
 				}
 
 				default:
+				{
+					panic("Unimplemented Shift 101 funct7 %d", inst.Shift.funct7);
 					break;
+				}
 			}
 			break;
 		}
@@ -234,7 +241,10 @@ void execute_opcode_alu_and_shift_imm(const instruction inst, riscv_cpu* cpu)
 		}
 
 		default:
+		{
+			panic("Unimplemented I funct3 %d", inst.I.funct3);
 			break;
+		}
 	}
 }
 
@@ -261,7 +271,10 @@ void execute_opcode_alu_register(const instruction inst, riscv_cpu* cpu)
 				}
 
 				default:
+				{
+					panic("Unimplemented R 000 funct7 %d", inst.R.funct7);
 					break;
+				}
 			}
 			break;
 		}
@@ -282,9 +295,7 @@ void execute_opcode_alu_register(const instruction inst, riscv_cpu* cpu)
 
 		case funct3_011: // sltu
 		{
-			uint32_t rs1 = cpu->registers[inst.R.rs1] & 0b00000000000000000000111111111111;
-			uint32_t rs2 = cpu->registers[inst.R.rs2] & 0b00000000000000000000111111111111;
-			cpu->registers[inst.R.rd] = rs1 < rs2;
+			cpu->registers[inst.R.rd] = cpu->registers[inst.R.rs1] < cpu->registers[inst.R.rs2];
 			cpu->program_counter = cpu->program_counter + 4;
 			break;
 		}
@@ -315,7 +326,10 @@ void execute_opcode_alu_register(const instruction inst, riscv_cpu* cpu)
 				}
 
 				default:
+				{
+					panic("Unimplemented R 101 funct7 %d", inst.R.funct7);
 					break;
+				}
 			}
 			break;
 		}
@@ -335,7 +349,10 @@ void execute_opcode_alu_register(const instruction inst, riscv_cpu* cpu)
 		}
 
 		default:
+		{
+			panic("Unimplemented R funct3 %d", inst.R.funct3);
 			break;
+		}
 	}
 }
 
@@ -364,7 +381,10 @@ void execute_opcode_e_and_system(const instruction inst, riscv_cpu* cpu)
 				}
 
 				default:
+				{
+					panic("Unimplemented E 000 imm11_0 %d", inst.I.imm11_0);
 					break;
+				}
 			}
 			break;
 		}
@@ -413,7 +433,10 @@ void execute_opcode_e_and_system(const instruction inst, riscv_cpu* cpu)
 		}
 
 		default:
+		{
+			panic("Unimplemented E funct3 %d", inst.I.funct3);
 			break;
+		}
 	}
 }
 
@@ -488,6 +511,9 @@ void execute_inst(const instruction inst, riscv_cpu* cpu)
 		}
 
 		default:
+		{
+			panic("Unimplemented opcode %d", inst.opcode);
 			break;
+		}
 	}
 }

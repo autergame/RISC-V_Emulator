@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 
 void my_assert(const char* exp, const char* func, const char* file, unsigned int line)
 {
@@ -14,3 +15,13 @@ void my_assert(const char* exp, const char* func, const char* file, unsigned int
 }
 
 #define myassert(expression) if (expression) { my_assert(#expression, __FUNCTION__, __FILE__, __LINE__); }
+
+void panic(const char* fmt, ...)
+{
+    char expression[255] = { '\0' };
+    va_list args;
+    va_start(args, fmt);
+    vsprintf_s(expression, 255, fmt, args);
+    va_end(args);
+    my_assert(expression, __FUNCTION__, __FILE__, __LINE__);
+}

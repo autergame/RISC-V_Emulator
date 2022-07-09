@@ -10,11 +10,8 @@ void test_imm_s(const char* name, uint32_t inst, int32_t start, int32_t end,
 	for (int32_t x = start; x <= end; x += inc)
 	{
 		uint32_t inst_x_enc = x_imm_enc(x);
-
 		uint32_t inst_x = inst_x_enc | inst;
-
 		int32_t inst_x_dec = x_imm(inst_x);
-
 		if (x != inst_x_dec)
 		{
 			printf("%s error: %" PRId32 " %" PRId32 "\n", name, x, inst_x_dec);
@@ -24,16 +21,13 @@ void test_imm_s(const char* name, uint32_t inst, int32_t start, int32_t end,
 }
 
 void test_imm_u(const char* name, uint32_t inst, uint32_t start, uint32_t end,
-	uint32_t(*x_imm_enc)(uint32_t), uint32_t(*x_imm)(uint32_t), int32_t inc)
+	uint32_t(*x_imm_enc)(uint32_t), uint32_t(*x_imm)(uint32_t), uint32_t inc)
 {
 	for (uint32_t x = start; x <= end; x += inc)
 	{
 		uint32_t inst_x_enc = x_imm_enc(x);
-
 		uint32_t inst_x = inst_x_enc | inst;
-
 		uint32_t inst_x_dec = x_imm(inst_x);
-
 		if (x != inst_x_dec)
 		{
 			printf("%s error: %" PRId32 " %" PRId32 "\n", name, x, inst_x_dec);
@@ -66,9 +60,7 @@ void test_inst_imm_s(const char* name, instruction inst, int32_t start, int32_t 
 	for (int32_t x = start; x <= end; x += inc)
 	{
 		instruction inst_x_enc = inst_x_imm_enc(inst, x);
-
 		int32_t inst_x_dec = inst_i_imm(inst_x_enc);
-
 		if (x != inst_x_dec)
 		{
 			printf("%s error: %" PRId32 " %" PRId32 "\n", name, x, inst_x_dec);
@@ -83,9 +75,7 @@ void test_inst_imm_u(const char* name, instruction inst, uint32_t start, uint32_
 	for (uint32_t x = start; x <= end; x += inc)
 	{
 		instruction inst_x_enc = inst_x_imm_enc(inst, x);
-
 		uint32_t inst_x_dec = inst_i_imm(inst_x_enc);
-
 		if (x != inst_x_dec)
 		{
 			printf("%s error: %" PRId32 " %" PRId32 "\n", name, x, inst_x_dec);
@@ -105,8 +95,8 @@ void tests_inst_imm()
 	test_inst_imm_s("I", inst_imm_i,      -2048,       2047, inst_i_imm_enc, inst_i_imm, 1);
 	test_inst_imm_s("S", inst_imm_s,      -2048,       2047, inst_s_imm_enc, inst_s_imm, 1);
 	test_inst_imm_s("B", inst_imm_b,      -4096,       4095, inst_b_imm_enc, inst_b_imm, 2);
-	test_inst_imm_u("U", inst_imm_j, 0x00000000, 0xffffe000, inst_u_imm_enc, inst_u_imm, 0x1000);
-	test_inst_imm_s("J", inst_imm_u,   -1048576,    1048575, inst_j_imm_enc, inst_j_imm, 2);
+	test_inst_imm_u("U", inst_imm_u, 0x00000000, 0xffffe000, inst_u_imm_enc, inst_u_imm, 0x1000);
+	test_inst_imm_s("J", inst_imm_j,   -1048576,    1048575, inst_j_imm_enc, inst_j_imm, 2);
 
 	instruction inst_imm_shift = inst_shift(0b1111111, 0b111, 0b1111111, 31, 31, 0b00000); // 1111111_00000_11111_111_11111_1111111
 	test_inst_imm_u("Shift", inst_imm_shift, 0, 31, inst_i_shamt_imm_enc, inst_i_shamt_imm, 1);

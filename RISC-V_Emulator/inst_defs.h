@@ -15,7 +15,7 @@
 		.rs2 = rs2_v, \
 		.funct7 = funct7_v \
 	} \
-} \
+}
 
 #define inst_i(opcode_v, funct3_v, rd_v, rs1_v, imm_v) \
 inst_i_imm_enc \
@@ -26,7 +26,7 @@ inst_i_imm_enc \
 			.opcode = opcode_v, \
 			.rd = rd_v, \
 			.funct3 = funct3_v, \
-			.rs1 = rs1_v, \
+			.rs1 = rs1_v \
 		} \
 	}, \
 	imm_v \
@@ -42,7 +42,7 @@ inst_i_shamt_imm_enc \
 			.rd = rd_v, \
 			.funct3 = funct3_v, \
 			.rs1 = rs1_v, \
-			.funct7 = funct7_v, \
+			.funct7 = funct7_v \
 		} \
 	}, \
 	shamt_v \
@@ -57,7 +57,7 @@ inst_s_imm_enc \
 			.opcode = opcode_v, \
 			.funct3 = funct3_v, \
 			.rs1 = rs1_v, \
-			.rs2 = rs2_v, \
+			.rs2 = rs2_v \
 		} \
 	}, \
 	imm_v \
@@ -72,7 +72,7 @@ inst_b_imm_enc \
 			.opcode = opcode_v, \
 			.funct3 = funct3_v, \
 			.rs1 = rs1_v, \
-			.rs2 = rs2_v, \
+			.rs2 = rs2_v \
 		} \
 	}, \
 	imm_v \
@@ -85,7 +85,7 @@ inst_u_imm_enc \
 	{ \
 		.U = { \
 			.opcode = opcode_v, \
-			.rd = rd_v, \
+			.rd = rd_v \
 		} \
 	}, \
 	imm_v \
@@ -98,7 +98,7 @@ inst_j_imm_enc \
 	{ \
 		.J = { \
 			.opcode = opcode_v, \
-			.rd = rd_v, \
+			.rd = rd_v \
 		} \
 	}, \
 	imm_v \
