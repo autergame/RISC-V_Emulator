@@ -266,7 +266,7 @@ uint32_t inst_u_imm(instruction inst)
 	return inst.U.imm31_12 << 12;
 }
 
-// 0000_0000_0000_1111_1111_1111_1111_1111 -> 1111_1111_1111_1111_1111_0000_0000_0000
+// 1111_1111_1111_1111_1111_0000_0000_0000
 instruction inst_u_imm_enc(instruction inst, uint32_t value)
 {
 	inst.U.imm31_12 = (value & 0b11111111111111111111000000000000) >> 12;

@@ -2,6 +2,7 @@
 
 #include "types.h"
 #include "imm_enc_dec.h"
+#include "myassert.h"
 
 void execute_opcode_branch(const instruction inst, riscv_cpu* cpu)
 {
@@ -391,28 +392,34 @@ void execute_opcode_e_and_system(const instruction inst, riscv_cpu* cpu)
 
 		case funct3_001: // csrrw
 		{
+			uint32_t newreg = cpu->registers[inst.I.rs1];
 			cpu->registers[inst.I.rd] = (uint32_t)cpu->csrs[inst.I.imm11_0];
-			cpu->csrs[inst.I.imm11_0] = cpu->registers[inst.I.rs1];
+			cpu->csrs[inst.I.imm11_0] = newreg;
 			cpu->program_counter = cpu->program_counter + 4;
 			break;
 		}
 
 		case funct3_010: // csrrs
 		{
-			cpu->csrs[inst.I.imm11_0] = cpu->csrs[inst.I.imm11_0] | cpu->registers[inst.I.rs1];
+			uint32_t mask = cpu->registers[inst.I.rs1];
+			cpu->registers[inst.I.rd] = (uint32_t)cpu->csrs[inst.I.imm11_0];
+			cpu->csrs[inst.I.imm11_0] = cpu->csrs[inst.I.imm11_0] | mask;
 			cpu->program_counter = cpu->program_counter + 4;
 			break;
 		}
 
 		case funct3_011: // csrrc
 		{
-			cpu->csrs[inst.I.imm11_0] = cpu->csrs[inst.I.imm11_0] & (!cpu->registers[inst.I.rs1]);
+			uint32_t mask = cpu->registers[inst.I.rs1];
+			cpu->registers[inst.I.rd] = (uint32_t)cpu->csrs[inst.I.imm11_0];
+			cpu->csrs[inst.I.imm11_0] = cpu->csrs[inst.I.imm11_0] & (!mask);
 			cpu->program_counter = cpu->program_counter + 4;
 			break;
 		}
 
 		case funct3_101: // csrrwi
 		{
+			cpu->registers[inst.I.rd] = (uint32_t)cpu->csrs[inst.I.imm11_0];
 			cpu->csrs[inst.I.imm11_0] = inst.I.rs1;
 			cpu->program_counter = cpu->program_counter + 4;
 			break;
@@ -420,6 +427,7 @@ void execute_opcode_e_and_system(const instruction inst, riscv_cpu* cpu)
 
 		case funct3_110: // csrrsi
 		{
+			cpu->registers[inst.I.rd] = (uint32_t)cpu->csrs[inst.I.imm11_0];
 			cpu->csrs[inst.I.imm11_0] = cpu->csrs[inst.I.imm11_0] | inst.I.rs1;
 			cpu->program_counter = cpu->program_counter + 4;
 			break;
@@ -427,6 +435,7 @@ void execute_opcode_e_and_system(const instruction inst, riscv_cpu* cpu)
 
 		case funct3_111: // csrrci
 		{
+			cpu->registers[inst.I.rd] = (uint32_t)cpu->csrs[inst.I.imm11_0];
 			cpu->csrs[inst.I.imm11_0] = cpu->csrs[inst.I.imm11_0] & (!inst.I.rs1);
 			cpu->program_counter = cpu->program_counter + 4;
 			break;

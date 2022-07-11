@@ -26,6 +26,7 @@ void test_lui(riscv_cpu* cpu)
 	assert(cpu->registers[r_t1] == 0x12345000);
 	assert(cpu->registers[r_t2] == 0x12345123);
 }
+
 void test_auipc(riscv_cpu* cpu)
 {
 	instruction inst_list[] =
@@ -404,8 +405,8 @@ void test_sltiu(riscv_cpu* cpu)
 {
 	instruction inst_list[] =
 	{
-		inst_addi(r_t0, r_zero, 2456), // 0x998
-		inst_sltiu(r_t1, r_t0, 3456),  // 0xd80
+		inst_addi(r_t0, r_zero, -127), // 0xffffff81
+		inst_sltiu(r_t1, r_t0, 3456)   // 0xd80
 	};
 
 	uint32_t inst_list_size = array_size(inst_list);
@@ -414,8 +415,8 @@ void test_sltiu(riscv_cpu* cpu)
 
 	run_riscv_cpu(cpu);
 
-	assert(cpu->registers[r_t0] == 0xfffff998);
-	assert(cpu->registers[r_t1] == 0x1);
+	assert(cpu->registers[r_t0] == 0xffffff81);
+	assert(cpu->registers[r_t1] == 0x0);
 }
 
 void test_xori(riscv_cpu* cpu)

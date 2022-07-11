@@ -88,7 +88,7 @@ inst_u_imm_enc \
 			.rd = rd_v \
 		} \
 	}, \
-	imm_v \
+	imm_v << 12 \
 )
 
 #define inst_j(opcode_v, rd_v, imm_v) \

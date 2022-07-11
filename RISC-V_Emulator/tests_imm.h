@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 #include "inst_defs.h"
+#include "myassert.h"
 
 void test_imm_s(const char* name, uint32_t inst, int32_t start, int32_t end,
 	uint32_t(*x_imm_enc)(int32_t), int32_t(*x_imm)(uint32_t), int32_t inc)
@@ -14,7 +15,7 @@ void test_imm_s(const char* name, uint32_t inst, int32_t start, int32_t end,
 		int32_t inst_x_dec = x_imm(inst_x);
 		if (x != inst_x_dec)
 		{
-			printf("%s error: %" PRId32 " %" PRId32 "\n", name, x, inst_x_dec);
+			panic("%s error: %" PRId32 " %" PRId32 "\n", name, x, inst_x_dec);
 			break;
 		}
 	}
@@ -30,7 +31,7 @@ void test_imm_u(const char* name, uint32_t inst, uint32_t start, uint32_t end,
 		uint32_t inst_x_dec = x_imm(inst_x);
 		if (x != inst_x_dec)
 		{
-			printf("%s error: %" PRId32 " %" PRId32 "\n", name, x, inst_x_dec);
+			panic("%s error: %" PRId32 " %" PRId32 "\n", name, x, inst_x_dec);
 			break;
 		}
 	}
@@ -63,7 +64,7 @@ void test_inst_imm_s(const char* name, instruction inst, int32_t start, int32_t 
 		int32_t inst_x_dec = inst_i_imm(inst_x_enc);
 		if (x != inst_x_dec)
 		{
-			printf("%s error: %" PRId32 " %" PRId32 "\n", name, x, inst_x_dec);
+			panic("%s error: %" PRId32 " %" PRId32 "\n", name, x, inst_x_dec);
 			break;
 		}
 	}
@@ -78,7 +79,7 @@ void test_inst_imm_u(const char* name, instruction inst, uint32_t start, uint32_
 		uint32_t inst_x_dec = inst_i_imm(inst_x_enc);
 		if (x != inst_x_dec)
 		{
-			printf("%s error: %" PRId32 " %" PRId32 "\n", name, x, inst_x_dec);
+			panic("%s error: %" PRId32 " %" PRId32 "\n", name, x, inst_x_dec);
 			break;
 		}
 	}
